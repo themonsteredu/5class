@@ -19,7 +19,10 @@ const textbookArtifacts = [
     "observe": "사람의 크기와 옷의 무늬는 어떻게 다른가요?",
     "caution": "크게 그렸다고 실제 키가 더 컸다는 뜻은 아닙니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-susan-lesson1.jpg",
+    "imageNote": "비상 교과서 26쪽 벽화의 인물 부분 발췌",
+    "credit": "비상교육 사회 5-2(설규주) · 26쪽",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
     "source": "비상교육 사회 5-2 · 26쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
     "core": true
@@ -362,3 +365,5 @@ export const lessonVisuals={1:['susan','dancers','kitchen','susan','susan','spoo
 lessons[0].guide.prep="비상 사회 5-2 26~29쪽, 모둠별 기기 또는 활동지";
 lessons[2].guide.prep="비상 사회 5-2 25~31쪽과 원문 링크, 모둠 기기";
 lessons[6].image="gold-crown";lessons[8].image="house";lessons[9].image="susan";
+
+lessons[0].guide.prep="비상 사회 5-2 26쪽. 그림 만나기 5분 → 단서 관찰 7분 → 사실·추측 구분 8분 → 모둠 질문 8분 → AI 역할 예상 6분 → 공유 6분. 1차시는 실시간 AI를 사용하지 않고 도움받을 일을 예상합니다.";

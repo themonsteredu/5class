@@ -14,3 +14,7 @@ CC BY 2.0: https://creativecommons.org/licenses/by/2.0/
 CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/
 
 글꼴: S-Core Dream 5 Medium / 7 ExtraBold. 사용자 기존 교육 자료의 WOFF를 재사용했으며 글꼴 자체는 수정하지 않았습니다. 제작사: 에스코어. https://s-core.co.kr/company/font/
+
+## Lesson 1 textbook excerpt
+- `assets/images/visang-susan-lesson1.jpg`: 비상교육 2022 개정 사회 5-2(설규주), 26쪽 수산리 고분 벽화. 전자교과서 화면에서 인물 부분만 발췌, 1123×421. 설명문·페이지 전체는 복제하지 않음. 그림 변경/생성 없음. 교과서 재사용 허락 또는 공개 라이선스가 확인되었다는 의미는 아님.
+- Source: https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01
