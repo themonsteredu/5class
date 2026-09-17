@@ -90,7 +90,10 @@ const textbookArtifacts = [
     "observe": "오늘날 수저와 그릇의 모양과 비교해 보세요.",
     "caution": "이 유물만으로 모든 백제 사람이 같은 식기를 썼다고 할 수는 없습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-spoon.jpg",
+    "credit": "비상교육 사회 5-2(설규주) · 교과서 발췌",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
+    "imageNote": "교과서의 유물 사진 부분 발췌입니다.",
     "source": "비상교육 사회 5-2 · 28쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
     "core": true
@@ -107,7 +110,10 @@ const textbookArtifacts = [
     "observe": "지붕과 기둥, 바닥의 높이를 살펴보세요.",
     "caution": "집을 본뜬 토기이며 실제 사람이 살던 집은 아닙니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-house.jpg",
+    "credit": "비상교육 사회 5-2(설규주) · 교과서 발췌",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
+    "imageNote": "교과서의 유물 사진 부분 발췌입니다.",
     "source": "비상교육 사회 5-2 · 28쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
     "core": true
@@ -124,7 +130,10 @@ const textbookArtifacts = [
     "observe": "몸을 감싸는 부분과 머리를 덮는 부분을 비교해 보세요.",
     "caution": "철이 풍부했다는 설명과 사진에서 직접 보이는 특징을 구분합니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-armor.jpg",
+    "credit": "비상교육 사회 5-2(설규주) · 교과서 발췌",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
+    "imageNote": "교과서의 유물 사진 부분 발췌입니다.",
     "source": "비상교육 사회 5-2 · 25쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
     "core": true
@@ -141,7 +150,10 @@ const textbookArtifacts = [
     "observe": "인물은 어떤 자세를 하고 있나요?",
     "caution": "작게 표현된 모습만으로 인물의 이름이나 직업을 단정하지 않습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-figurines.jpg",
+    "credit": "비상교육 사회 5-2(설규주) · 교과서 발췌",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
+    "imageNote": "교과서의 유물 사진 부분 발췌입니다.",
     "source": "비상교육 사회 5-2 · 28쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
     "core": true
@@ -192,7 +204,10 @@ const textbookArtifacts = [
     "observe": "기둥과 지붕의 모양을 찾아보세요.",
     "caution": "교과서의 미륵사 복원도는 과거 모습을 추정해 그린 그림입니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-pagoda.jpg",
+    "credit": "비상교육 사회 5-2(설규주) · 교과서 발췌",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
+    "imageNote": "교과서에 실린 석탑 복원 모습입니다.",
     "source": "비상교육 사회 5-2 · 30쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
     "core": true
@@ -367,3 +382,18 @@ lessons[2].guide.prep="비상 사회 5-2 25~31쪽과 원문 링크, 모둠 기�
 lessons[6].image="gold-crown";lessons[8].image="house";lessons[9].image="susan";
 
 lessons[0].guide.prep="비상 사회 5-2 26쪽. 그림 만나기 5분 → 단서 관찰 7분 → 사실·추측 구분 8분 → 모둠 질문 8분 → AI 역할 예상 6분 → 공유 6분. 1차시는 실시간 AI를 사용하지 않고 도움받을 일을 예상합니다.";
+
+Object.assign(lessons[0],{
+ title:'삼국과 가야에 대한 궁금증 발견하기',short:'여섯 자료에서 궁금증 찾기',question:'이 자료만으로 옛사람들의 생활을 어떻게 알 수 있을까요?',focus:'여러 유물과 유적을 관찰하며 궁금한 점을 찾고, AI가 도울 일을 예상해요.',product:'관찰 기록과 모둠의 궁금증',
+ steps:['여섯 자료를 함께 둘러보고 모둠별로 자세히 관찰할 자료를 고릅니다.','직접 보이는 특징을 말하고 자료별로 궁금한 점을 모읍니다.','함께 알아보고 싶은 질문을 고르고 AI가 도울 일과 사람이 확인할 자료를 생각합니다.'],
+ pages:[
+ ['자료 둘러보기','여섯 자료에서 무엇이 궁금한가요?','벽화·식기·집 모양 토기·토우·갑옷·석탑을 살펴봅니다.','사진의 이름을 외우게 하기보다 서로 다른 생활 모습과 기술에 관심을 갖게 합니다.'],
+ ['모둠 관찰','어느 부분이 눈에 들어왔나요?','한 자료를 골라 모양·크기·자세를 말합니다.','사진의 어느 부분을 보았는지 짚게 합니다.'],
+ ['궁금증 발견','사진만 보고 알 수 있을까요?','직접 본 특징에서 더 알아볼 질문을 만듭니다.','자료를 바꾸면 각 자료의 관찰 메모와 질문이 따로 저장됩니다.'],
+ ['모둠 대화','함께 알아보고 싶은 것은?','모은 질문을 읽고 하나를 골라 까닭을 이야기합니다.','정답 맞히기나 사실 검증을 앞당기지 않고 탐구할 궁금증을 발견하는 데 집중합니다.'],
+ ['AI 역할 예상','AI가 어떻게 도울까요?','정리·낱말 설명·질문 제안 중 필요한 도움을 예상합니다.','실제 AI 응답은 2차시에서 비교합니다. 1차시에 표시되는 문장은 활동 안내입니다.'],
+ ['공유','무엇이 궁금해졌나요?','자료의 특징과 우리 질문을 다른 모둠에 소개합니다.','다음 시간에는 선택한 질문에 대한 AI의 답을 자료와 비교합니다.']
+ ],
+ guide:{prep:'비상 사회 5-2 25·26·28·30쪽, 모둠별 기기 또는 활동지. 화면에 여섯 자료의 이미지를 제공합니다.',watch:'사진의 구체적인 특징에서 질문이 생겼는가? AI에게 필요한 도움과 사람이 확인할 일을 연결하는가?',misconception:'집 모양 토기를 실제 집으로, 석탑 복원 모습을 당시 사진으로 생각하지 않도록 표시를 함께 봅니다. 한 유물로 모든 사람의 생활을 단정하지 않습니다.'}
+});
+lessonVisuals[1]=['susan','spoon','house','figurines','armor','pagoda'];
