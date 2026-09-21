@@ -45,3 +45,15 @@
 @media(max-width:650px){.l2-research-sources{grid-template-columns:1fr;gap:16px}.l2-claims li{grid-template-columns:1fr;gap:8px;padding:18px 0}.l2-source-tabs{gap:8px}.l2-shell .l1-tools .button{font-size:12px}}
 
 .l3-worksheet .writing-lines{height:72px}.l3-worksheet .introduction-lines{height:108px}.l3-worksheet p{overflow-wrap:anywhere}.l3-worksheet footer{line-height:1.8}@media print{.l3-worksheet .writing-lines{height:22mm}.l3-worksheet .introduction-lines{height:32mm}.l3-worksheet h3{margin-top:5mm}.l3-worksheet footer{font-size:8pt}}
+
+/* Lesson 3: one reading surface, three quiet steps. */
+.l3-page{max-width:1000px;margin:0 auto;padding:28px 40px 48px;word-break:keep-all;overflow-wrap:anywhere}
+.l3-steps{display:flex;gap:24px;border-bottom:1px solid var(--line);padding-bottom:12px;flex-wrap:wrap}
+.l3-steps button{border:0!important;border-radius:0;background:transparent!important;padding:10px 0;color:#70756e;font-size:15px}
+.l3-steps button[aria-current]{color:var(--ink);box-shadow:0 2px 0 currentColor;font-weight:700}
+.l3-heading{margin:40px 0 32px}.l3-heading>p{font-size:14px;color:#70756e;margin-bottom:12px}.l3-heading h1{font-size:clamp(25px,3vw,36px);line-height:1.5;letter-spacing:-.04em}
+.l3-observe{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.l3-observe figure{margin:0}.l3-observe img{max-width:100%;max-height:330px;object-fit:contain}.l3-observe p,.l3-lead,.l3-check,.l3-page>p{font-size:18px;line-height:1.9}.l3-observe h2{font-size:23px;line-height:1.7;margin:26px 0 14px}
+.l3-writing{border-left:2px solid #cbd0c4;padding:8px 0 8px 28px;margin:36px 0}.l3-writing p{font-size:clamp(20px,2.5vw,27px);line-height:2}.l3-note{color:#70756e;font-size:15px!important}.l3-check{padding-left:24px;margin:30px 0}.l3-check li{padding:10px 0}.l3-nav{display:flex;justify-content:space-between;margin-top:48px;border-top:1px solid var(--line);padding-top:20px}
+.l3-worksheet .writing-lines{height:110px}.l3-worksheet .introduction-lines{height:180px}
+@media(max-width:700px){.l3-page{padding:20px}.l3-steps{gap:16px}.l3-steps button{font-size:13px}.l3-heading{margin:28px 0}.l3-observe{grid-template-columns:1fr;gap:22px}.l3-observe img{max-height:260px}.l3-shell .l1-header{gap:12px;flex-wrap:wrap}.l3-shell .l1-tools{gap:8px;flex-wrap:wrap}.l3-writing{padding-left:18px}.l3-nav{margin-top:32px}}
+@media print{.l3-worksheet .writing-lines{height:35mm}.l3-worksheet .introduction-lines{height:55mm}}
