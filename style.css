@@ -43,3 +43,5 @@
 .l2-claims li>span{font-size:14px;color:#526963}.l2-claims p{margin:0;font-size:clamp(19px,2.1vw,27px);line-height:1.65;word-break:keep-all}
 .l2-research-sources{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:28px 0}.l2-research-sources section{min-width:0}.l2-research-sources p{line-height:1.8;word-break:keep-all}.l2-teacher-answers li{margin:20px 0}.l2-teacher-answers p{line-height:1.8}.l2-source-tabs .button[aria-pressed=true]{background:#24483f;color:#fff}.l2-shell .l1-tools{flex-wrap:wrap}
 @media(max-width:650px){.l2-research-sources{grid-template-columns:1fr;gap:16px}.l2-claims li{grid-template-columns:1fr;gap:8px;padding:18px 0}.l2-source-tabs{gap:8px}.l2-shell .l1-tools .button{font-size:12px}}
+
+.l3-worksheet .writing-lines{height:72px}.l3-worksheet .introduction-lines{height:108px}.l3-worksheet p{overflow-wrap:anywhere}.l3-worksheet footer{line-height:1.8}@media print{.l3-worksheet .writing-lines{height:22mm}.l3-worksheet .introduction-lines{height:32mm}.l3-worksheet h3{margin-top:5mm}.l3-worksheet footer{font-size:8pt}}
