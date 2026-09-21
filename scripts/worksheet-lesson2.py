@@ -1,41 +1,55 @@
 from pathlib import Path
-import fitz
-from fontTools.ttLib import TTFont as Font
+import json,fitz
+from fontTools.ttLib import TTFont
 ROOT=Path(__file__).resolve().parents[1]
 for suffix,name in [('5Medium','SCore'),('7ExtraBold','SCoreBold')]:
-    font=Font(ROOT/f'assets/fonts/S-CoreDream-{suffix}.woff');font.flavor=None
-    target=ROOT/f'tmp/pdfs/{name}.otf';target.parent.mkdir(parents=True,exist_ok=True);font.save(target)
-out=ROOT/'assets/worksheets/lesson-2.pdf';out.parent.mkdir(parents=True,exist_ok=True)
-doc=fitz.open();page=doc.new_page(width=595.276,height=841.89)
-doc.set_metadata({'title':'2차시 활동지 - 역사 자료로 질문 다듬기','author':'MOAKIT'})
-for name in ['SCore','SCoreBold']:page.insert_font(fontname=name,fontfile=str(ROOT/f'tmp/pdfs/{name}.otf'))
+ f=TTFont(ROOT/f'assets/fonts/S-CoreDream-{suffix}.woff');f.flavor=None
+ p=ROOT/f'tmp/pdfs/{name}.otf';p.parent.mkdir(parents=True,exist_ok=True);f.save(p)
+sets=json.loads((ROOT/'assets/lesson-2-claims.json').read_text())
 mm=72/25.4
-def rgb(h):return tuple(int(h[i:i+2],16)/255 for i in (0,2,4))
-ink=rgb('263f3b');muted=rgb('66716c');line=rgb('bfc6bf')
-def text(x,y,t,size=11,bold=False,color=ink):
-    page.insert_text((x*mm,y*mm),t,fontsize=size,fontname='SCoreBold' if bold else 'SCore',color=color)
-def rule(x,y,w=172,color=line):
-    page.draw_line((x*mm,y*mm),((x+w)*mm,y*mm),color=color,width=.5)
-def check(x,y,label):
-    page.draw_rect(fitz.Rect(x*mm,(y-2.7)*mm,(x+2.7)*mm,y*mm),color=muted,width=.6);text(x+4.6,y,label,10)
-def heading(y,num,title,hint=''):
-    text(19,y,num,10,True,muted);text(30,y,title,14,True)
-    if hint:text(30,y+7,hint,9,color=muted)
-text(19,18,'MOAKIT',11,True);text(141,18,'5학년 · 사회 × AI · 2차시',9,color=muted)
-text(19,32,'역사 자료로 질문 다듬기',22,True)
-text(19,42,'AI의 설명을 자료와 비교하고, 우리 모둠의 탐구 질문을 정해요.',10,color=muted)
-text(19,54,'이름',10);rule(31,55,44);text(88,54,'모둠',10);rule(100,55,34);text(147,54,'날짜',10);rule(159,55,32)
-rule(19,62)
-heading(74,'01','지난 시간의 모둠 질문')
-rule(22,92,169)
-heading(110,'02','AI의 답변에서 확인하고 싶은 문장','두 답변이 같아도, 자료로 확인할 문장 하나를 골라요.')
-rule(22,137,169)
-heading(155,'03','자료로 확인했어요.')
-text(22,168,'자료 이름 · 쪽수',9,color=muted);rule(57,171,134)
-check(22,184,'자료에 나와요');check(79,184,'다르게 나와요');check(140,184,'더 확인해요')
-text(22,197,'확인한 내용',9,color=muted);rule(22,209,169)
-heading(229,'04','우리 모둠이 조사할 질문','어느 자료에서 무엇을 알아보고 싶은지 적어요.')
-rule(22,253,169)
-text(22,267,'다음 시간에 찾아볼 자료나 낱말',9,color=muted);rule(22,278,169)
-text(19,290,'AI의 설명은 자료와 비교해요. 오늘 정한 질문으로 다음 시간에 자료를 모아요.',8,color=muted)
-doc.subset_fonts();doc.save(out,garbage=4,deflate=True);print(out)
+ink=(.12,.23,.21);muted=(.35,.4,.38);line=(.7,.75,.72)
+out=ROOT/'assets/worksheets';out.mkdir(exist_ok=True)
+allpages=fitz.open()
+for id,s in sets.items():
+ doc=fitz.open();page=doc.new_page(width=595.276,height=841.89)
+ for font in ['SCore','SCoreBold']:page.insert_font(fontname=font,fontfile=str(ROOT/f'tmp/pdfs/{font}.otf'))
+ def text(x,y,t,size=10,bold=False,color=ink):
+  page.insert_text((x*mm,y*mm),t,fontsize=size,fontname='SCoreBold' if bold else 'SCore',color=color)
+ def rule(y,x=19,w=172):page.draw_line((x*mm,y*mm),((x+w)*mm,y*mm),color=line,width=.5)
+ def choices(y,final=False):
+  text(19,y,'최종 판단' if final else '처음 생각',9,bold=True)
+  for x,label in zip([49,79,109],['사실','거짓','판단하기 어려움' if final else '잘 모르겠음']):
+   page.draw_rect(fitz.Rect(x*mm,(y-2.7)*mm,(x+2.7)*mm,y*mm),color=muted,width=.5);text(x+4,y,label,9)
+ text(19,17,'MOAKIT',11,True);text(142,17,'5학년 · 사회 × AI · 2차시',9)
+ text(19,30,'AI의 유물 설명, 사실일까?',21,True)
+ text(19,40,s['name'],12,True)
+ text(19,49,'이름: __________________    모둠: __________    날짜: ______________',10)
+ text(19,58,'설명을 읽고 예상한 뒤, 자료에서 찾은 근거로 판단해 봅시다.',10)
+ text(19,66,'AI 설명 검증을 위한 학습용 문장입니다. 오류가 포함되어 있습니다.',8.5,color=muted)
+ for i,c in enumerate(s['claims']):
+  y=75+i*59
+  rule(y)
+  text(19,y+8,f'{i+1:02d}',10,True)
+  # Wrap claim text within the available width using font metrics.
+  font=fitz.Font(fontfile=str(ROOT/'tmp/pdfs/SCore.otf'))
+  words=c['text'].split();rows=['']
+  for word in words:
+   candidate=(rows[-1]+' '+word).strip()
+   if font.text_length(candidate,fontsize=10.5)>157*mm:rows.append(word)
+   else:rows[-1]=candidate
+  for j,row in enumerate(rows):text(30,y+8+j*5,row,10.5,True)
+  choices(y+20)
+  text(19,y+29,'확인한 자료',9);rule(y+30,46,145)
+  text(19,y+39,'찾은 근거',9);rule(y+40,46,145)
+  choices(y+51,True)
+ rule(252)
+ text(19,262,'바로잡은 설명',11,True);text(65,262,'문장 (    )번을 사실에 맞게 고쳐 써 봅시다.',9)
+ rule(275)
+ text(19,285,'자료에는 책의 쪽수 또는 기관·자료 제목을 씁니다. 못 찾은 내용은 거짓으로 단정하지 않습니다.',8)
+ text(19,291,f'자료 찾기: 비상 사회 5-2 {s["page"]}쪽 / {s["site"]}',8,color=muted)
+ doc.set_metadata({'title':f'2차시 검증 활동지 - {s["name"]}','author':'MOAKIT'})
+ doc.subset_fonts();doc.save(out/f'lesson-2-{id}.pdf',garbage=4,deflate=True)
+ allpages.insert_pdf(doc)
+allpages.set_metadata({'title':'2차시 유물별 검증 활동지 6종','author':'MOAKIT'})
+allpages.save(out/'lesson-2.pdf',garbage=4,deflate=True)
+print('Generated 6 single-page worksheets and combined PDF')
