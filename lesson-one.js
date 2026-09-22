@@ -14,6 +14,8 @@ const notes={
  pagoda:{topic:'건축과 불교문화',look:['층마다 있는 지붕','아래쪽 기둥','위아래 크기 차이'],question:'사람들은 왜 큰 탑을 세웠을까?',limit:'겉모양만 보고 탑을 세운 까닭을 알 수 있을까요?',notice:'교과서에 실린 석탑 복원 모습이에요.'}
 };
 const get=id=>artifacts.find(a=>a.id===id);
+const observations={susan:'사람들의 크기와 옷의 무늬가 달라요.',spoon:'수저와 그릇이 있어요.',house:'기둥 위에 집의 바닥이 있어요.',figurines:'흙으로 만든 작은 인물들이 있어요.',armor:'몸을 감싸는 갑옷과 머리를 덮는 투구가 있어요.',pagoda:'여러 층의 지붕과 기둥이 있어요.'};
+const shortNames={susan:'수산리 벽화',spoon:'수저와 사발',house:'집 모양 토기',figurines:'신라 토우',armor:'갑옷과 투구',pagoda:'미륵사지 석탑'};
 export const observationKey=(id,kind)=>`l1-${id}-${kind}`;
 const chosen=(answer,key)=>observationIds.includes(answer(key))?answer(key):'susan';
 
@@ -22,7 +24,7 @@ export function lessonOneFigure(id){
  return `<figure class="l1-figure"><div class="l1-image"><img src="assets/images/${e(a.image)}" alt="${e(a.name)}${id==='pagoda'?' · 복원 모습':''}"></div><figcaption><span>${e(a.name)}${id==='pagoda'?' · 복원 모습':''}</span><a href="${textbook.url}" target="_blank" rel="noopener">비상 사회 5-2 · ${a.page}쪽 ↗</a></figcaption></figure>`;
 }
 function selector(active,btn){
- return `<div class="l1-source-strip" role="group" aria-label="관찰 자료 선택">${observationIds.map((id,i)=>btn(`<img src="assets/images/${get(id).image}" alt=""><span>0${i+1}</span>`,'l1-object',`data-id="${id}" aria-label="${e(get(id).name)} 보기" title="${e(get(id).name)}" aria-pressed="${active===id}"`)).join('')}<span>다른 자료도 살펴보세요.</span></div>`;
+ return `<section class="l1-source-switcher" aria-label="유물 바꿔 보기"><p>다른 유물도 여기서 살펴보세요.</p><div class="l1-source-strip" role="group" aria-label="관찰 자료 선택">${observationIds.map(id=>btn(`<img src="assets/images/${get(id).image}" alt=""><span>${shortNames[id]}</span>`,'l1-object',`data-id="${id}" aria-label="${e(get(id).name)} 보기" aria-pressed="${active===id}"`)).join('')}</div></section>`;
 }
 const paper=(number,message)=>`<div class="l1-paper-note"><span>활동지${number?' '+number:''}</span><p>${message}</p></div>`;
 
@@ -43,19 +45,19 @@ export function lessonOne({step,source='susan',exampleStep=0,btn}){
  if(step===1){
   title='옛생활의 단서를 찾아볼까요?';
   lead='사진에서 직접 보이는 것을 말하고, 어느 부분을 보았는지 짚어 주세요.';
-  content=`<div class="l1-observe">${lessonOneFigure(id)}<div class="l1-observe-copy"><p class="l1-side-label">찬찬히 살펴봐요</p><ul class="l1-clues">${n.look.map(x=>`<li>${x}</li>`).join('')}</ul><p class="l1-speaking-hint">“위쪽에는 …이 있어요.” “두 부분의 모양이 …해요.”</p>${n.notice?`<p class="l1-note">${n.notice}</p>`:''}</div></div>${selector(id,btn)}${paper('01','사진에서 본 것 두 가지를 짧게 적어요.')}`;
+  content=`<div class="l1-observe">${lessonOneFigure(id)}<div class="l1-observe-copy"><p class="l1-side-label">찬찬히 살펴봐요</p><ul class="l1-clues">${n.look.map(x=>`<li>${x}</li>`).join('')}</ul><p class="l1-speaking-hint">“위쪽에는 …이 있어요.” “두 부분의 모양이 …해요.”</p>${n.notice?`<p class="l1-note">${n.notice}</p>`:''}</div></div>${paper('01','사진에서 본 것 두 가지를 짧게 적어요.')}`;
  }
  if(step===2){
-  title='그릇만 보고 음식도 알 수 있을까요?';
-  lead='백제의 그릇으로 함께 생각해 봅시다. 먼저 내 생각을 말한 뒤 다음 내용을 열어 보세요.';
+  title='사진만으로 알 수 있을까요?';
+  lead='보고 있는 유물로 함께 생각해 봅시다. 먼저 내 생각을 말한 뒤 다음 내용을 열어 보세요.';
   const reveal=Math.max(0,Math.min(2,exampleStep));
-  const prompts=['그릇과 수저가 보여요. 무엇을 담아 먹었는지도 보이나요?','먹었던 음식은 사진에 보이지 않아요. 그렇다면 무엇이 궁금한가요?','보이는 단서에서 출발해, 더 알아볼 질문이 생겼어요.'];
-  content=`<div class="l1-example-work">${lessonOneFigure('spoon')}<div class="l1-example-copy"><p class="l1-side-label">함께 연습하기 · 백제의 식기</p><ol class="l1-example-chain"><li><span>본 것</span><p>수저와 그릇이 있어요.</p></li>${reveal>=1?'<li><span>사진으로 모르는 것</span><p>무엇을 담아 먹었는지는 보이지 않아요.</p></li>':''}${reveal>=2?'<li class="l1-example-question"><span>더 알아볼 질문</span><p>백제 사람들은 어떤 음식을 먹었을까요?</p></li>':''}</ol><p class="l1-example-prompt" aria-live="polite">${prompts[reveal]}</p><div class="l1-example-controls">${reveal<2?btn(reveal===0?'사진에 없는 정보 생각하기 →':'궁금증을 질문으로 바꾸기 →','l1-example',`data-example="${reveal+1}"`,'quiet'):btn('처음부터 다시 보기','l1-example','data-example="0"','quiet small')}</div></div></div><p class="l1-lesson-point">유물은 옛생활의 단서예요. 사진에 없는 정보는 다른 자료에서 더 찾아봐야 해요.</p>`;
+  const prompts=[n.limit,'사진만으로 알기 어려운 점에서 어떤 질문을 만들 수 있을까요?','보이는 단서에서 출발해, 더 알아볼 질문이 생겼어요.'];
+  content=`<div class="l1-example-work">${lessonOneFigure(id)}<div class="l1-example-copy"><p class="l1-side-label">함께 연습하기 · ${e(get(id).name)}</p><ol class="l1-example-chain"><li><span>본 것</span><p>${observations[id]}</p></li>${reveal>=1?`<li><span>사진으로 모르는 것</span><p>${n.limit}</p></li>`:''}${reveal>=2?`<li class="l1-example-question"><span>더 알아볼 질문</span><p>${n.question}</p></li>`:''}</ol><p class="l1-example-prompt" aria-live="polite">${prompts[reveal]}</p><div class="l1-example-controls">${reveal<2?btn(reveal===0?'사진에 없는 정보 생각하기 →':'궁금증을 질문으로 바꾸기 →','l1-example',`data-example="${reveal+1}"`,'quiet'):btn('처음부터 다시 보기','l1-example','data-example="0"','quiet small')}</div></div></div><p class="l1-lesson-point">유물은 옛생활의 단서예요. 사진에 없는 정보는 다른 자료에서 더 찾아봐야 해요.</p>`;
  }
  if(step===3){
   title='우리 자료에서는 무엇이 궁금한가요?';
   lead='사진으로 모르는 것을 각자 말하고, 우리 모둠이 함께 알아볼 질문 하나를 정해 보세요.';
-  content=`<div class="l1-observe l1-question-transfer">${lessonOneFigure(id)}<div class="l1-observe-copy"><p class="l1-side-label">활동지 01의 관찰 기록을 다시 봐요</p><h2 class="l1-open-question">${n.limit}</h2><ol class="l1-question-turns"><li>각자 궁금한 점을 말해요.</li><li>함께 가장 알아보고 싶은 것을 골라요.</li><li>무엇을 알아볼지 한 문장으로 말해요.</li></ol><details class="l1-hint"><summary>질문을 만드는 데 도움이 필요하면</summary><p>“누가 / 어떻게 / 왜 …?”로 시작해 보세요.</p><p class="l1-question-example">예: ${n.question}</p></details></div></div>${selector(id,btn)}${paper('02','우리 모둠의 질문 하나를 적어요. 왜 궁금한지는 말로 이야기해요.')}`;
+  content=`<div class="l1-observe l1-question-transfer">${lessonOneFigure(id)}<div class="l1-observe-copy"><p class="l1-side-label">활동지 01의 관찰 기록을 다시 봐요</p><h2 class="l1-open-question">${n.limit}</h2><ol class="l1-question-turns"><li>각자 궁금한 점을 말해요.</li><li>함께 가장 알아보고 싶은 것을 골라요.</li><li>무엇을 알아볼지 한 문장으로 말해요.</li></ol><details class="l1-hint"><summary>질문을 만드는 데 도움이 필요하면</summary><p>“누가 / 어떻게 / 왜 …?”로 시작해 보세요.</p><p class="l1-question-example">예: ${n.question}</p></details></div></div>${paper('02','우리 모둠의 질문 하나를 적어요. 왜 궁금한지는 말로 이야기해요.')}`;
  }
  if(step===4){
   title='우리 질문은 어떻게 알아볼까요?';
@@ -67,5 +69,5 @@ export function lessonOne({step,source='susan',exampleStep=0,btn}){
   lead='활동지를 보며 우리 모둠의 질문과 알아볼 방법을 소개해 주세요.';
   content=`<div class="l1-share-statement"><span>관찰에서 탐구로</span><p>“우리는 <span class="l1-blank">본 것</span>을 보고, <span class="l1-blank">질문</span>이 궁금해졌어요.”</p></div><div class="l1-share-prompts"><p><b>이어서 말해요</b> “이 질문을 해결하기 위해 …을 활용하여 …을 조사하려고 합니다.”</p><p><b>친구 이야기를 들어요</b> 어떤 단서에서 그 질문이 생겼나요?</p></div><div class="l1-next-lesson"><span>2차시 예고</span><p>오늘 만든 질문을 실제 AI에게 묻고, 답을 역사 자료와 비교해요. 활동지를 다음 시간에도 가져오세요.</p></div>`;
  }
- return `<div class="l1-workspace"><nav class="l1-progress" aria-label="1차시 활동 순서"><ol>${firstSteps.map((name,i)=>`<li>${btn(`<span>0${i+1}</span>${name}`,'l1-step',`data-step="${i}" ${i===step?'aria-current="step"':''}`)}</li>`).join('')}</ol></nav><article class="l1-content"><header class="l1-page-heading"><p class="l1-kicker">1차시 · LOOK <span>${firstSteps[step]} · ${times[step]}분</span></p><h1>${title}</h1><p class="l1-lead">${lead}</p></header>${content}<nav class="l1-nav" aria-label="1차시 활동 이동">${btn('← 이전','l1-step',`data-step="${step-1}" ${step===0?'disabled':''}`,'quiet')}<span>${step+1} / 6</span>${step<5?btn('다음 →','l1-step',`data-step="${step+1}"`,'primary'):'<a class="button primary" href="#lesson/2">2차시로 →</a>'}</nav></article></div>`;
+ return `<div class="l1-workspace"><nav class="l1-progress" aria-label="1차시 활동 순서"><ol>${firstSteps.map((name,i)=>`<li>${btn(`<span>0${i+1}</span>${name}`,'l1-step',`data-step="${i}" ${i===step?'aria-current="step"':''}`)}</li>`).join('')}</ol></nav><article class="l1-content"><header class="l1-page-heading"><p class="l1-kicker">1차시 · LOOK <span>${firstSteps[step]} · ${times[step]}분</span></p><h1>${title}</h1><p class="l1-lead">${lead}</p></header>${step>=1&&step<=4?selector(id,btn):''}${content}<nav class="l1-nav" aria-label="1차시 활동 이동">${btn('← 이전','l1-step',`data-step="${step-1}" ${step===0?'disabled':''}`,'quiet')}<span>${step+1} / 6</span>${step<5?btn('다음 →','l1-step',`data-step="${step+1}"`,'primary'):'<a class="button primary" href="#lesson/2">2차시로 →</a>'}</nav></article></div>`;
 }

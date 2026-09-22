@@ -39,10 +39,13 @@ const textbookArtifacts = [
     "observe": "소매의 모양과 팔의 움직임을 살펴보세요.",
     "caution": "벽화의 장면을 모든 사람이 매일 하던 일이라고 말할 수는 없습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "baekje-dancers.jpg",
     "source": "비상교육 사회 5-2 · 29쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
-    "core": true
+    "core": true,
+    "imageNote": "무용총 무용도 모사도 · 오른쪽의 춤추는 사람들을 살펴보세요.",
+    "credit": "한성백제박물관 · 무용총 무용도(H2094d)",
+    "creditUrl": "https://baekjemuseum.seoul.go.kr/module/index.jsp?boardid=a&mmode=content&mpid=SBM0301000000&pid=17943"
   },
   {
     "id": "guests",
@@ -56,10 +59,13 @@ const textbookArtifacts = [
     "observe": "사람마다 크기가 다른 까닭은 무엇일까요?",
     "caution": "그림 속 사람들의 정확한 대화는 알 수 없습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-guests.png",
     "source": "비상교육 사회 5-2 · 29쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
-    "core": true
+    "core": true,
+    "imageNote": "교과서 29쪽 벽화 사진의 인물·생활 장면 발췌",
+    "credit": "비상교육 사회 5-2(설규주) · 29쪽",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01"
   },
   {
     "id": "kitchen",
@@ -73,10 +79,13 @@ const textbookArtifacts = [
     "observe": "음식을 만드는 곳과 보관하는 곳을 구분해 보세요.",
     "caution": "벽화만으로 음식의 정확한 이름이나 조리법을 정할 수는 없습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-kitchen.png",
     "source": "비상교육 사회 5-2 · 29쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
-    "core": true
+    "core": true,
+    "imageNote": "교과서 29쪽 벽화 사진의 인물·생활 장면 발췌",
+    "credit": "비상교육 사회 5-2(설규주) · 29쪽",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01"
   },
   {
     "id": "spoon",
@@ -170,10 +179,14 @@ const textbookArtifacts = [
     "observe": "위로 세운 장식과 매달린 장식을 찾아보세요.",
     "caution": "왕이 매일 쓰던 관이라고 단정하지 않습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "nmk-gold-crown.jpg",
     "source": "비상교육 사회 5-2 · 28쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
-    "core": true
+    "core": true,
+    "imageNote": "황남대총 북분 금관 · 국립중앙박물관 소장품 사진",
+    "credit": "국립중앙박물관 · 공공누리 제3유형",
+    "creditUrl": "https://www.museum.go.kr/MUSEUM/contents/M0501000000.do?relicRecommendId=16890&schM=view",
+    "license": "https://www.kogl.or.kr/info/licenseType3.do"
   },
   {
     "id": "belt",
@@ -187,10 +200,14 @@ const textbookArtifacts = [
     "observe": "띠 아래에 매달린 장식의 모양을 비교해 보세요.",
     "caution": "화려한 장신구는 모든 신라 사람의 옷차림을 대표하지 않습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "nmk-belt.jpg",
     "source": "비상교육 사회 5-2 · 28쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
-    "core": true
+    "core": true,
+    "imageNote": "황남대총 북분 금제 허리띠 · 국립중앙박물관 소장품 사진",
+    "credit": "국립중앙박물관 · 공공누리 제3유형",
+    "creditUrl": "https://www.museum.go.kr/MUSEUM/contents/M0501000000.do?relicRecommendId=16890&schM=view",
+    "license": "https://www.kogl.or.kr/info/licenseType3.do"
   },
   {
     "id": "pagoda",
@@ -224,10 +241,14 @@ const textbookArtifacts = [
     "observe": "불상 앞모습과 뒤에 새겨진 글을 함께 살펴보세요.",
     "caution": "금동은 금으로만 만든 것이 아니라 구리 합금 표면에 금을 입힌 것입니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "nmk-buddha.jpg",
     "source": "비상교육 사회 5-2 · 30쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
-    "core": true
+    "core": true,
+    "imageNote": "불상의 앞모습과 뒷면 명문 · 국립중앙박물관 소장품 사진",
+    "credit": "국립중앙박물관 · 공공누리 제3유형",
+    "creditUrl": "https://www.museum.go.kr/MUSEUM/contents/M0501000000.do?relicRecommendId=16913&schM=view",
+    "license": "https://www.kogl.or.kr/info/licenseType3.do"
   },
   {
     "id": "seosan",
@@ -241,10 +262,13 @@ const textbookArtifacts = [
     "observe": "세 인물의 표정과 자세는 어떻게 다른가요?",
     "caution": "불상의 미소를 모든 백제 사람의 성격으로 설명하지 않습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "visang-seosan.png",
     "source": "비상교육 사회 5-2 · 30쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
-    "core": true
+    "core": true,
+    "imageNote": "교과서 30쪽 사진 발췌",
+    "credit": "비상교육 사회 5-2(설규주) · 30쪽",
+    "creditUrl": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01"
   },
   {
     "id": "glass",
@@ -258,14 +282,19 @@ const textbookArtifacts = [
     "observe": "모양이 비슷한 물건에서 무엇을 짐작할 수 있을까요?",
     "caution": "모양만 보고 물건이 이동한 경로나 만든 사람을 확정하지 않습니다.",
     "period": "삼국·가야 시대",
-    "image": "",
+    "image": "nmk-glass.jpg",
     "source": "비상교육 사회 5-2 · 31쪽",
     "url": "https://ibook.vivasam.com/CBS_iBook/10703/contents/index.html?skin=basic01",
-    "core": true
+    "core": true,
+    "imageNote": "황남대총 출토 봉수형 유리병 · 신라 유리 제품의 한 예",
+    "credit": "국립중앙박물관 · 공공누리 제3유형",
+    "creditUrl": "https://www.museum.go.kr/MUSEUM/contents/M0501000000.do?relicRecommendId=519881&schM=view",
+    "license": "https://www.kogl.or.kr/info/licenseType3.do"
   }
 ];
-const tomb = {...legacyArtifacts.find(a=>a.id==='tomb'),core:true,page:28,theme:'기술과 교류',source:'비상교육 사회 5-2 · 28쪽',url:textbook.url,fact:'백제 무령왕과 왕비의 무덤입니다. 무덤 내부와 함께 중국 도자기, 일본에서 나는 나무로 만든 관을 살펴보면 주변 나라와의 교류를 생각해 볼 수 있습니다.',observe:'무덤의 벽돌과 함께 나온 물건들의 재료를 살펴보세요.',imageNote:'관련 사진 · 교과서의 무령왕릉 내부 복원도와 촬영 장면이 다릅니다.'};
-export const artifacts = [...textbookArtifacts,tomb,...legacyArtifacts.filter(a=>a.id!=='tomb').map(a=>({...a,core:false,theme:'추가 탐구',imageNote:'추가 탐구 사진 · 교과서 본문 사진과 구분해 살펴보세요.'}))];
+// 이전 작업 파일에 저장된 자료는 그대로 읽되 새 수업·자료실에서는 제외합니다.
+export const artifacts = [...textbookArtifacts,...legacyArtifacts.map(a=>({...a,core:false,archived:a.id==='tomb',theme:'추가 탐구',imageNote:'추가 탐구 사진 · 교과서 본문 사진과 구분해 살펴보세요.'}))];
+export const activeArtifacts=artifacts.filter(a=>!a.archived);
 export const coreArtifacts=artifacts.filter(a=>a.core);
 export const themes=['전체','음식과 집','옷차림과 신분','옷차림과 놀이','종교와 믿음','기술과 교류'];
 // 질문 · 관찰 · 개념 · 시범 · 활동 · 정리: 각 차시를 개별 집필한 투사용 교재.
@@ -303,9 +332,9 @@ lesson(4,'Explore','어떤 기준으로 나눌까?','사람과 AI의 분류 비�
  ['모둠 활동','다르게 나눈 자료를 찾아요.','우리 분류를 먼저 기록합니다. 실제 AI 분류와 비교하고 이유를 자료에서 찾아봅니다.','학생과 AI 중 누가 이겼는지보다 어떤 기준을 사용했는지 설명하게 합니다.'],
  ['돌아보기','기준을 하나 바꾸면 어떻게 될까요?','나라별로 나눈 표를 재료별로 다시 나누어 보세요. 달라지는 자료를 말해 보세요.','변경 전의 학생 분류와 AI 결과는 비교 기록에 남겨 두고 새로운 기준은 메모합니다.']
 ],['분류 기준과 우리 분류를 먼저 씁니다.','교사와 실제 AI 분류를 실행하고 결과를 옮깁니다.','차이가 생긴 이유와 바꿔 볼 기준을 씁니다.'],{prep:'3차시 조사표, 교사 관리 생성형 AI',watch:'AI와 자신의 분류 차이를 기준으로 설명하는가?',misconception:'사진만 보고 나라를 맞히는 정확도 경쟁으로 만들지 않습니다.'}),
-lesson(5,'Explore','유물과 사람은 어떻게 연결될까?','역사 관계도 만들기','두 자료 사이에 어떤 연결이 있을까요?','자료·나라·생활을 근거와 함께 연결해요.','근거 있는 관계도','tomb',[
- ['생각 열기','유물 이름만 외우면 충분할까요?','무령왕릉과 지석은 어떤 관계일까요? 두 단어 사이에 들어갈 말을 생각해 봅니다.','지석의 기록은 무덤의 주인을 확인하는 근거가 됩니다.'],
- ['자료 관찰','선 위에 들어갈 말을 찾아요.','“무령왕릉 — 백제” 사이에 “백제의 무덤이다”라고 적어 보세요.','단순히 선을 긋는 것보다 연결 이유를 문장으로 쓰는 것이 중요합니다.'],
+lesson(5,'Explore','유물과 사람은 어떻게 연결될까?','역사 관계도 만들기','두 자료 사이에 어떤 연결이 있을까요?','자료·나라·생활을 근거와 함께 연결해요.','근거 있는 관계도','armor',[
+ ['생각 열기','유물 이름만 외우면 충분할까요?','철 갑옷과 투구는 무엇을 보호했을까요? 유물과 쓰임을 연결해 봅니다.','갑옷은 몸을, 투구는 머리를 보호하는 데 쓰였습니다. 유물과 쓰임을 자료의 설명에서 찾아 연결합니다.'],
+ ['자료 관찰','선 위에 들어갈 말을 찾아요.','“철 갑옷과 투구 — 가야” 사이에 “가야의 철기 문화를 보여 준다”라고 적어 보세요.','단순히 선을 긋는 것보다 연결 이유를 문장으로 쓰는 것이 중요합니다.'],
  ['알아보기','사실과 추측을 다르게 표시해요.','자료에서 확인한 연결은 “확인한 사실”, 우리가 생각한 연결은 “추측”으로 남깁니다.','추측도 가치가 있지만 사실처럼 전시하지 않도록 구분합니다.'],
  ['함께 해보기','두 나라 자료도 연결할 수 있어요.','금관과 청동 수저에서 공통점을 찾고, 서로 다른 쓰임도 살펴보세요.','금속 공예라는 공통점이 있다고 해서 같은 쓰임이었다고 결론 내리지 않습니다.'],
  ['모둠 활동','우리 관계도를 만들어요.','자료나 나라를 잇고, 연결 문장과 출처를 적습니다. 연결 하나를 친구에게 설명해 보세요.','나라·유물·생활이라는 노드 이름을 사용하되 어려운 “노드” 용어를 가르칠 필요는 없습니다.'],
@@ -327,7 +356,7 @@ lesson(7,'Act','우리 모둠 역사관을 설계하자','전시 순서 설계�
  ['모둠 활동','우리 역사관의 첫 장면을 정해요.','제목과 소개를 쓰고, 전시할 자료를 선택해 순서를 바꿔 봅니다.','각 전시물을 고른 이유가 탐구 질문과 연결되는지 확인합니다.'],
  ['돌아보기','이 순서로 보면 무엇을 알게 될까요?','친구에게 전시 순서만 보여 주고 어떤 이야기인지 물어보세요.','설계도는 완성본이 아니므로 관람객의 반응을 보고 수정할 수 있습니다.']
 ],['역사관 제목과 전할 이야기를 씁니다.','전시할 자료를 선택하고 순서를 정합니다.','각 자료가 왜 필요한지 설명합니다.'],{prep:'1~6차시 누적 기록',watch:'전시 주제와 자료 선택이 연결되는가?',misconception:'디자인 꾸미기에 앞서 내용과 근거를 먼저 정합니다.'}),
-lesson(8,'Act','근거가 있는 역사관을 만들자','해설 쓰고 검증하기','AI가 쓴 해설에서 무엇을 고쳐야 할까요?','AI 초안을 확인하고 우리 해설로 수정해요.','디지털 역사관','tomb',[
+lesson(8,'Act','근거가 있는 역사관을 만들자','해설 쓰고 검증하기','AI가 쓴 해설에서 무엇을 고쳐야 할까요?','AI 초안을 확인하고 우리 해설로 수정해요.','디지털 역사관','pagoda',[
  ['생각 열기','해설을 AI에게 모두 맡겨도 될까요?','말은 자연스러운데 자료에 없는 내용이 들어 있다면 어떻게 할까요?','모르는 내용을 빼거나 판단을 보류하고 근거를 확인해야 합니다.'],
  ['자료 관찰','초안과 자료를 나란히 놓아요.','문장마다 출처에서 확인할 수 있는지 살펴봅니다.','AI 초안은 확인 전 상태로 보존하고 수정한 최종 해설과 구분합니다.'],
  ['알아보기','사실, 추측, 아직 모르는 것','“자료에서 확인했습니다.” “이런 생활을 했을 것으로 생각합니다.”를 구분해 써요.','추측에는 그 이유를 붙이고 확정적인 표현을 줄입니다.'],
@@ -375,7 +404,7 @@ lessons[1].guide.prep='비상 사회 5-2 28~29쪽, 교사 관리 생성형 AI';
 lessons[3].pages[0]=['비교하기','금관과 수저를 함께 묶을 수 있을까요?','재료로 나누면 둘 다 금속으로, 쓰임으로 나누면 장신구와 식기로 나눌 수 있어요.','분류는 기준에 따라 달라집니다. 나라·재료·쓰임을 섞어서 한 기준처럼 사용하지 않습니다.'];
 lessons[4].pages[3]=['연결하기','그림과 물건을 함께 살펴보아요.','안악 3호분의 부엌 그림과 백제의 수저를 “음식 생활”로 연결해 보세요.','서로 다른 나라의 자료이므로 같은 조리법이나 식사 방식을 가졌다고 단정하지 않습니다.'];
 lessons[5].pages[1]=['자료 살피기','어떤 자료의 설명을 세었나요?','부엌 그림과 수저 설명만 모으면 음식과 관련된 말이 많이 나올 수 있어요.','자료의 주제와 분량을 함께 살펴보고 나라 전체의 특징이라고 일반화하지 않습니다.'];
-export const lessonVisuals={1:['susan','dancers','kitchen','susan','susan','spoon'],2:['house','house','house','kitchen','spoon','house'],3:['house','house','armor','spoon','tomb','house'],4:['gold-crown','spoon','house','armor','figurines','belt'],5:['tomb','tomb','glass','kitchen','spoon','gold-crown'],6:['kitchen','spoon','tomb','glass','house','kitchen'],7:['gold-crown','house','kitchen','spoon','tomb','glass'],8:['tomb','pagoda','buddha','seosan','tomb','house'],9:['house','spoon','susan','gold-crown','glass','kitchen'],10:['susan','house','tomb','buddha','glass','kitchen']};
+export const lessonVisuals={1:['susan','dancers','kitchen','susan','susan','spoon'],2:['house','house','house','kitchen','spoon','house'],3:['house','house','armor','spoon','figurines','house'],4:['gold-crown','spoon','house','armor','figurines','belt'],5:['armor','armor','glass','kitchen','spoon','gold-crown'],6:['kitchen','spoon','armor','glass','house','kitchen'],7:['gold-crown','house','kitchen','spoon','figurines','glass'],8:['pagoda','pagoda','buddha','seosan','armor','house'],9:['house','spoon','susan','gold-crown','glass','kitchen'],10:['susan','house','armor','buddha','glass','kitchen']};
 
 lessons[0].guide.prep="비상 사회 5-2 26~29쪽, 모둠별 기기 또는 활동지";
 lessons[2].guide.prep="비상 사회 5-2 25~31쪽과 원문 링크, 모둠 기기";
@@ -385,11 +414,11 @@ lessons[0].guide.prep="비상 사회 5-2 26쪽. 그림 만나기 5분 → 단서
 
 Object.assign(lessons[0],{
  title:'삼국과 가야에 대한 궁금증 발견하기',short:'생활의 단서에서 탐구 질문으로',question:'이 자료만으로 옛사람들의 생활을 어떻게 알 수 있을까요?',focus:'유물에서 옛생활의 단서를 찾고, 사진만으로 모르는 것을 질문으로 만들어요.',product:'본 것 두 가지 · 모둠 질문 하나 · 알아볼 방법 하나',
- steps:['여섯 자료를 함께 보고 모둠별로 자세히 볼 자료를 정합니다. 활동지 01에 직접 본 특징 두 가지를 적습니다.','백제의 식기를 보며 본 것 → 사진으로 모르는 것 → 더 알아볼 질문을 차례로 함께 말합니다.','모둠이 고른 자료로 돌아가 같은 방법으로 질문을 만들고, 활동지 02에 하나를 적습니다.','교과서·박물관 설명·AI의 도움을 살펴보고 먼저 해 볼 방법과 찾을 내용을 활동지 03에 적습니다.','어떤 단서에서 질문이 생겼고 어떻게 알아볼지 소개합니다. 활동지를 2차시까지 보관합니다.'],
+ steps:['여섯 자료를 함께 보고 모둠별로 자세히 볼 자료를 정합니다. 활동지 01에 직접 본 특징 두 가지를 적습니다.','선택한 유물을 보며 본 것 → 사진으로 모르는 것 → 더 알아볼 질문을 차례로 함께 말합니다.','같은 화면에서 유물을 바꿔 살펴보며 질문을 만들고, 활동지 02에 하나를 적습니다.','교과서·박물관 설명·AI의 도움을 살펴보고 먼저 해 볼 방법과 찾을 내용을 활동지 03에 적습니다.','어떤 단서에서 질문이 생겼고 어떻게 알아볼지 소개합니다. 활동지를 2차시까지 보관합니다.'],
  pages:[
  ['여섯 자료 살펴보기','옛사람들은 어떻게 살았을까요?','여섯 자료에서 사람의 모습, 먹고사는 생활, 옛날 기술을 살펴봅니다.','벽화와 토우는 사람의 모습, 식기와 집 모양 토기는 먹고사는 생활, 갑옷과 석탑은 기술과 믿음을 중심으로 함께 봅니다. 여섯 자료를 모두 소개한 뒤 하나를 자세히 고릅니다.'],
  ['생활의 단서 찾기','옛생활의 단서를 찾아볼까요?','모양·크기·자세 등 사진에 보이는 특징 두 가지를 찾습니다.','사진의 어느 부분을 봤는지 짚게 합니다. 해설을 베끼지 않고 직접 본 것을 활동지 01에 짧게 적습니다.'],
- ['함께 연습하기','그릇만 보고 음식도 알 수 있을까요?','수저와 그릇이 보인다 → 먹었던 음식은 보이지 않는다 → 백제 사람들은 어떤 음식을 먹었을까?','버튼을 누르기 전에 학생이 먼저 말할 시간을 줍니다. 사진만으로 답할 수 없는 부분을 질문으로 바꾸는 시범입니다. 음식의 정답을 알려 주거나 AI 답의 진위를 판정하는 시간이 아닙니다.'],
+ ['함께 연습하기','사진만으로 알 수 있을까요?','선택한 유물에서 본 것 → 사진으로 모르는 것 → 더 알아볼 질문을 차례로 말해 봅시다.','버튼을 누르기 전에 학생이 먼저 말할 시간을 줍니다. 사진만으로 답할 수 없는 부분을 질문으로 바꾸는 시범입니다. 음식의 정답을 알려 주거나 AI 답의 진위를 판정하는 시간이 아닙니다.'],
  ['우리 모둠의 질문','우리 자료에서는 무엇이 궁금한가요?','관찰한 자료로 돌아가, 더 알아볼 질문 하나를 함께 정합니다.','모두 한 번씩 궁금한 점을 말합니다. 함께 알아보고 싶은 질문 하나를 활동지 02에 적고, 어떤 단서에서 생긴 질문인지 말하게 합니다.'],
  ['알아볼 방법','우리 질문은 어떻게 알아볼까요?','교과서·박물관 설명·AI의 도움을 살펴보고 먼저 해 볼 방법을 정합니다.','활동지 03에 방법 하나를 표시하고 찾거나 부탁할 내용을 짧게 적습니다. 어떤 방법을 골랐든 AI가 찾을 낱말 제안이나 어려운 말 설명을 도울 수 있을지 함께 예상합니다. 실제 AI 사용은 2차시입니다.'],
  ['질문 나누기','무엇을, 왜 알아보고 싶나요?','본 것과 질문, 알아볼 방법을 연결해 소개합니다.','옆 모둠에 질문을 소개한 뒤 두세 모둠의 사례를 함께 듣습니다. 오늘의 질문을 실제 AI에게 묻고 역사 자료와 비교하는 2차시로 연결합니다.']

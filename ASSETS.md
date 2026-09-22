@@ -26,3 +26,27 @@ CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/
 - `visang-figurines.jpg`: 28쪽 신라 토우, 원 소장처 표기 국립중앙박물관.
 - `visang-armor.jpg`: 25쪽 가야 철 갑옷과 투구, 원 소장처 표기 국립중앙박물관.
 - `visang-pagoda.jpg`: 30쪽 익산 미륵사지 석탑 **복원 모습**. 화면·캡션·관찰 안내에 복원 표시.
+
+## Missing photo completion
+새 사진 8종을 로컬 정적 파일로 제공하므로 외부 이미지 서버 접속에 의존하지 않습니다.
+
+| 파일 | 내용·출처 | 표시·이용 조건 |
+|---|---|---|
+| nmk-gold-crown.jpg | 국립중앙박물관, 황남대총 북분 금관. https://www.museum.go.kr/files/zin/curator_56_2.jpg | 공공누리 제3유형, 내려받은 원본 그대로 |
+| nmk-belt.jpg | 국립중앙박물관, 황남대총 북분 금제 허리띠. https://www.museum.go.kr/files/zin/curator_56_4.jpg | 공공누리 제3유형, 내려받은 원본 그대로 |
+| nmk-buddha.jpg | 국립중앙박물관, 연가7년명 금동여래입상 앞·뒷면. https://www.museum.go.kr/files/zin/curator_73_1.jpg | 공공누리 제3유형, 내려받은 원본 그대로 |
+| nmk-glass.jpg | 국립중앙박물관, 황남대총 출토 봉수형 유리병. https://www.museum.go.kr/files/zin/curator_217_1.jpg | 공공누리 제3유형, 내려받은 원본 그대로. 유리 제품의 대표 예시라고 명시 |
+| baekje-dancers.jpg | 한성백제박물관 H2094d, 무용총 무용도. https://baekjemuseum.seoul.go.kr/upfile/arch/1596608254210_0_jpg | 2004년 제작한 모사도임을 표시. 원본 파일 그대로, 공개 라이선스 확인을 뜻하지 않음 |
+| visang-guests.png | 비상교육 사회 5-2(설규주), 29쪽 무용총 손님맞이 그림 | 전자교과서 PDF의 그림 영역 발췌 |
+| visang-kitchen.png | 비상교육 사회 5-2(설규주), 29쪽 안악 3호분 부엌과 고기 창고 | 전자교과서 PDF의 그림 영역 발췌 |
+| visang-seosan.png | 비상교육 사회 5-2(설규주), 30쪽 서산 용현리 마애여래 삼존상 | 전자교과서 PDF의 사진 영역 발췌 |
+
+박물관 해설·이용 조건을 확인한 원문:
+- 금관·허리띠: https://www.museum.go.kr/MUSEUM/contents/M0501000000.do?relicRecommendId=16890&schM=view
+- 불상: https://www.museum.go.kr/MUSEUM/contents/M0501000000.do?relicRecommendId=16913&schM=view
+- 유리병: https://www.museum.go.kr/MUSEUM/contents/M0501000000.do?relicRecommendId=519881&schM=view
+- 무용도 모사도: https://baekjemuseum.seoul.go.kr/module/index.jsp?boardid=a&mmode=content&mpid=SBM0301000000&pid=17943
+- 공공누리 제3유형: https://www.kogl.or.kr/info/licenseType3.do
+
+교과서 발췌 이미지는 그림·사진 부분만 PDF에서 렌더링했습니다. 생성·복원·보정하지 않았고, 교과서 공개 라이선스가 확인되었다는 의미는 아닙니다. 사진 출처는 화면과 내보낸 역사관에도 표시됩니다.
+기존 muryeong-tomb.jpg는 이전 학생 작업 파일 호환을 위해 보존하되, 새 수업·자료실·비교 선택에는 제공하지 않습니다.
