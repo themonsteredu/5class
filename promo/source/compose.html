@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>MOAKIT 5class 홍보영상</title>
+<style>
+@font-face{font-family:SCDream;src:url('../../assets/fonts/S-CoreDream-5Medium.woff2') format('woff2');font-weight:400 600}
+@font-face{font-family:SCDream;src:url('../../assets/fonts/S-CoreDream-7ExtraBold.woff2') format('woff2');font-weight:700 900}
+:root{--bg:#0f2b28;--ink:#f9f8f4;--mute:#a9bdb6;--gold:#d8bd83;--lime:#d7e59a;--paper:#f9f8f4;--deep:#173e3b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:SCDream,sans-serif;letter-spacing:-0.03em;word-break:keep-all}
+.stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(1200px 760px at 82% 18%,#1d4a45 0%,transparent 60%),radial-gradient(900px 600px at 8% 92%,#163a36 0%,transparent 60%),var(--bg)}
+.grid{position:absolute;inset:-100px;background-image:linear-gradient(rgba(216,189,131,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(216,189,131,.05) 1px,transparent 1px);background-size:80px 80px}
+.scene{position:absolute;inset:0;opacity:0}
+.a{will-change:transform,opacity}
+/* hero */
+.hero .txt{position:absolute;left:140px;top:250px;width:980px}
+.eyebrow{font-size:30px;font-weight:600;color:var(--gold);letter-spacing:.02em;margin-bottom:30px;display:flex;align-items:center;gap:16px}
+.eyebrow::before{content:"";width:44px;height:3px;background:var(--gold);display:block}
+.big{font-size:100px;font-weight:800;line-height:1.16;letter-spacing:-0.05em}
+.big em{font-style:normal;color:var(--lime)}
+.sub{font-size:36px;font-weight:500;color:#d3e0db;margin-top:36px;line-height:1.5}
+.photo{position:absolute;border-radius:22px;background:var(--paper);padding:18px;box-shadow:0 40px 90px rgba(0,0,0,.45);overflow:hidden}
+.photo img{display:block;width:100%;height:100%;object-fit:contain;border-radius:10px}
+.photo span{position:absolute;left:0;right:0;bottom:0;padding:10px 18px;font-size:20px;font-weight:600;color:var(--deep);background:rgba(249,248,244,.94)}
+/* window scenes */
+.cap{position:absolute;left:110px;top:0;bottom:0;width:560px;display:flex;flex-direction:column;justify-content:center}
+.cap .num{font-size:26px;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:24px}
+.cap h2{font-size:64px;font-weight:800;line-height:1.22;letter-spacing:-0.05em}
+.cap h2 em{font-style:normal;color:var(--lime)}
+.cap p{font-size:30px;font-weight:500;color:#c3d3ce;line-height:1.55;margin-top:30px}
+.chips{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.chip{font-size:23px;font-weight:600;padding:10px 20px;border-radius:999px;border:1.5px solid rgba(215,229,154,.5);color:var(--lime);background:rgba(215,229,154,.08)}
+.win{position:absolute;left:720px;top:176px;width:1110px;border-radius:20px;overflow:hidden;background:var(--paper);border:1.5px solid rgba(216,189,131,.35);box-shadow:0 40px 120px rgba(0,0,0,.5)}
+.win .bar{height:52px;display:flex;align-items:center;gap:10px;padding:0 22px;background:#e9ece4;border-bottom:1px solid #d6d9cf}
+.win .bar i{width:14px;height:14px;border-radius:50%;background:#c3c8bd;display:block}
+.win .bar span{margin-left:22px;flex:1;height:32px;border-radius:9px;background:#fff;color:#65746e;font-size:19px;display:flex;align-items:center;padding:0 18px;font-weight:500;letter-spacing:0}
+.win .view{position:relative;width:1110px;height:624px;overflow:hidden;background:var(--paper)}
+.win .view img{position:absolute;left:0;top:0;transform-origin:0 0}
+.tag{position:absolute;padding:14px 24px;border-radius:14px;background:rgba(15,43,40,.94);border:1.5px solid var(--lime);font-size:27px;font-weight:700;color:var(--lime);box-shadow:0 18px 50px rgba(0,0,0,.45);white-space:nowrap}
+.tag.gold{border-color:var(--gold);color:var(--gold)}
+/* lessons */
+.lessons .head{position:absolute;left:0;right:0;top:110px;text-align:center}
+.lessons .head h2{font-size:76px;font-weight:800;letter-spacing:-0.05em}
+.lessons .head h2 em{font-style:normal;color:var(--lime)}
+.lessons .head p{font-size:32px;color:#c3d3ce;margin-top:20px;font-weight:500}
+.lgrid{position:absolute;left:130px;right:130px;top:370px;display:grid;grid-template-columns:repeat(5,1fr);gap:24px}
+.card{height:230px;border-radius:22px;padding:28px 28px;background:linear-gradient(160deg,#1c4642,#123330);border:1.5px solid rgba(216,189,131,.22);display:flex;flex-direction:column;justify-content:space-between}
+.card b{display:block;margin-bottom:8px;font-size:21px;color:var(--gold);font-weight:700;letter-spacing:.08em}
+.card .n{font-size:54px;font-weight:800;color:rgba(249,248,244,.2);line-height:1}
+.card strong{font-size:31px;font-weight:700;line-height:1.3;letter-spacing:-0.04em}
+.card.hi{border-color:var(--lime);background:linear-gradient(160deg,#2a5a4f,#173e3b)} .card.hi b{color:var(--lime)}
+/* outro */
+.outro{display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding-bottom:90px}
+.logo{display:flex;align-items:center;gap:30px}
+.logo .m{width:120px;height:120px;border-radius:50%;background:var(--paper);color:var(--deep);font-size:66px;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif}
+.logo .name{font-size:96px;font-weight:900;letter-spacing:-0.02em;text-align:left;line-height:1}
+.logo .name small{display:block;font-size:28px;letter-spacing:.12em;color:var(--gold);font-weight:600;margin-top:14px}
+.outro .line{font-size:52px;font-weight:700;margin-top:70px;letter-spacing:-0.04em}
+.outro .line em{font-style:normal;color:var(--lime)}
+.pill{margin-top:52px;font-size:36px;font-weight:700;padding:20px 46px;border-radius:999px;background:var(--lime);color:var(--deep)}
+.outro .foot{margin-top:38px;font-size:26px;color:var(--mute);font-weight:500}
+.subs{position:absolute;left:0;right:0;bottom:44px;display:flex;justify-content:center;pointer-events:none}
+.subs span{font-size:40px;font-weight:600;line-height:1.35;color:#fff;background:rgba(6,22,20,.82);padding:14px 34px;border-radius:16px;text-align:center;max-width:1600px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.progress{position:absolute;left:0;bottom:0;height:6px;background:var(--lime);opacity:.85}
+</style></head>
+<body>
+<div class="stage" id="stage">
+  <div class="grid a" id="grid"></div>
+
+  <section class="scene hero" id="s-hero">
+    <div class="txt">
+      <div class="eyebrow a" data-in="0.3">초등 5학년 사회 · AI와 함께하는 역사 탐구</div>
+      <div class="big a" data-in="0.7">유물로 살펴보는<br><em>삼국과 가야</em>의 생활</div>
+      <div class="sub a" data-in="1.6">보고, 묻고, 확인하며 우리 모둠의 역사관을 만들어요</div>
+    </div>
+    <div class="photo a" data-float="0" style="left:1180px;top:120px;width:330px;height:400px"><img src="../../assets/images/nmk-gold-crown.jpg"><span>황남대총 북분 금관 · 신라</span></div>
+    <div class="photo a" data-float="1" style="left:1540px;top:230px;width:290px;height:350px"><img src="../../assets/images/visang-house.jpg"><span>집 모양 토기 · 가야</span></div>
+    <div class="photo a" data-float="2" style="left:1230px;top:560px;width:360px;height:320px"><img src="../../assets/images/visang-figurines.jpg"><span>신라 토우</span></div>
+    <div class="photo a" data-float="3" style="left:1620px;top:620px;width:250px;height:290px"><img src="../../assets/images/visang-armor.jpg"><span>철 갑옷 · 가야</span></div>
+  </section>
+
+  <section class="scene lessons" id="s-lessons">
+    <div class="head"><h2 class="a" data-in="0.1">열 번의 수업, <em>하나의 역사관</em></h2><p class="a" data-in="0.4">발견 → 탐구 → 제작 → 나눔, 10차시 흐름이 한 화면에 모두 들어 있어요.</p></div>
+    <div class="lgrid">
+      <div class="card a" data-in="0.6"><div class="n">01</div><div><b>LOOK</b><strong>생활의 단서에서<br>탐구 질문으로</strong></div></div>
+      <div class="card a" data-in="0.7"><div class="n">02</div><div><b>LOOK</b><strong>궁금증 조사하고<br>설명 확인하기</strong></div></div>
+      <div class="card a" data-in="0.8"><div class="n">03</div><div><b>EXPLORE</b><strong>출처 있는<br>조사표 만들기</strong></div></div>
+      <div class="card hi a" data-in="0.9"><div class="n">04</div><div><b>EXPLORE</b><strong>사람과 AI의<br>분류 비교</strong></div></div>
+      <div class="card a" data-in="1.0"><div class="n">05</div><div><b>EXPLORE</b><strong>역사 관계도<br>만들기</strong></div></div>
+      <div class="card a" data-in="1.1"><div class="n">06</div><div><b>ACT</b><strong>역사 낱말<br>살펴보기</strong></div></div>
+      <div class="card a" data-in="1.2"><div class="n">07</div><div><b>ACT</b><strong>전시 순서<br>설계하기</strong></div></div>
+      <div class="card a" data-in="1.3"><div class="n">08</div><div><b>ACT</b><strong>해설 쓰고<br>검증하기</strong></div></div>
+      <div class="card a" data-in="1.4"><div class="n">09</div><div><b>PRACTICE</b><strong>서로 확인하고<br>고치기</strong></div></div>
+      <div class="card hi a" data-in="1.5"><div class="n">10</div><div><b>PRACTICE</b><strong>전시하고<br>돌아보기</strong></div></div>
+    </div>
+  </section>
+
+  <section class="scene" id="s-look">
+    <div class="cap">
+      <div class="num a" data-in="0.2">1차시 · 관찰하기</div>
+      <h2 class="a" data-in="0.4">교과서 속 유물,<br><em>크게 보고</em><br>단서를 찾아요</h2>
+      <p class="a" data-in="0.8">벽화, 수저, 집 모양 토기, 토우… 여섯 자료를 칠판 화면에 띄워 함께 관찰해요.</p>
+    </div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>MOAKIT 5class · 1차시</span></div><div class="view"><img id="v-look"></div></div>
+  </section>
+
+  <section class="scene" id="s-verify">
+    <div class="cap">
+      <div class="num a" data-in="0.2">2차시 · 조사하고 검증하기</div>
+      <h2 class="a" data-in="0.4">이 문장,<br><em>정말 사실일까?</em></h2>
+      <p class="a" data-in="0.8">교과서와 공식 기관 자료를 찾아 사실 · 거짓 · 판단하기 어려움을 스스로 가려요.</p>
+    </div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>MOAKIT 5class · 2차시</span></div><div class="view"><img id="v-verify"></div></div>
+  </section>
+
+  <section class="scene" id="s-library">
+    <div class="cap">
+      <div class="num a" data-in="0.2">교과서 자료실</div>
+      <h2 class="a" data-in="0.4">두 자료를<br><em>나란히</em> 비교해요</h2>
+      <p class="a" data-in="0.8">비상교육 사회 5-2와 연계된 자료 14종. 나라별 · 주제별로 골라 봐요.</p>
+      <div class="chips a" data-in="1.2"><span class="chip">고구려</span><span class="chip">백제</span><span class="chip">신라</span><span class="chip">가야</span></div>
+    </div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>MOAKIT 5class · 자료실</span></div><div class="view"><img id="v-library"></div></div>
+  </section>
+
+  <section class="scene" id="s-ai">
+    <div class="cap">
+      <div class="num a" data-in="0.2">4차시 · 사람과 AI</div>
+      <h2 class="a" data-in="0.4">우리 분류 vs<br><em>AI 분류</em></h2>
+      <p class="a" data-in="0.8">같은 기준으로 나눠도 결과가 달라요. 왜 다른지 근거를 들어 따져 봐요.</p>
+    </div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>MOAKIT 5class · 4차시 활동</span></div><div class="view"><img id="v-ai"></div></div>
+    <div class="tag gold a" id="tag-ai" style="left:1330px;top:860px">AI는 답이 아니라, 비교할 친구</div>
+  </section>
+
+  <section class="scene" id="s-words">
+    <div class="cap">
+      <div class="num a" data-in="0.2">5 · 6차시 · 분석하기</div>
+      <h2 class="a" data-in="0.4">낱말을 세고,<br><em>관계도</em>로 이어요</h2>
+      <p class="a" data-in="0.8">“확인한 사실”과 “우리의 추측”을 구분해서 연결해요.</p>
+    </div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>MOAKIT 5class · 5·6차시 활동</span></div><div class="view"><img id="v-words"></div></div>
+  </section>
+
+  <section class="scene" id="s-museum">
+    <div class="cap">
+      <div class="num a" data-in="0.2">7~10차시 · 우리 역사관</div>
+      <h2 class="a" data-in="0.4">근거를 담은<br><em>우리 모둠<br>역사관</em> 완성</h2>
+      <p class="a" data-in="0.8">해설마다 출처를 확인하고, 관람용 파일로 내려받아 서로 관람해요.</p>
+    </div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>MOAKIT 5class · 우리 역사관</span></div><div class="view"><img id="v-museum"></div></div>
+    <div class="tag a" id="tag-museum" style="left:1380px;top:860px">예시 모둠의 가상 작품</div>
+  </section>
+
+  <section class="scene" id="s-teacher">
+    <div class="cap">
+      <div class="num a" data-in="0.2">선생님을 위해</div>
+      <h2 class="a" data-in="0.4">수업 준비는<br><em>가볍게</em></h2>
+      <p class="a" data-in="0.8">40분 운영 흐름, 차시별 지도안, 인쇄용 A4 활동지까지 함께 제공해요.</p>
+      <div class="chips a" data-in="1.2"><span class="chip">설치 없음</span><span class="chip">로그인 없음</span><span class="chip">기기에 자동 저장</span></div>
+    </div>
+    <div class="win a" data-win><div class="bar"><i></i><i></i><i></i><span>MOAKIT 5class · 교사 자료</span></div><div class="view"><img id="v-teacher"></div></div>
+  </section>
+
+  <section class="scene outro" id="s-outro">
+    <div class="logo a" data-in="0.1"><div class="m">M</div><div class="name">MOAKIT 5class<small>삼국 · 가야 생활 탐구실</small></div></div>
+    <div class="line a" data-in="0.6">AI는 돕고, <em>판단은 우리가</em></div>
+    <div class="pill a" data-in="1.1">초등 5학년 · AI × 사회 · 10차시</div>
+    <div class="foot a" data-in="1.5">설치 없이 브라우저에서 바로 · 교실 큰 화면과 태블릿 모두 OK</div>
+  </section>
+  <div class="subs"><span id="sub"></span></div>
+  <div class="progress" id="prog"></div>
+</div>
+<script>
+const FPS = 30;
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const lerp = (a, b, t) => a + (b - a) * t;
+// 녹화 클립(프레임 폴더)과 전체 화면 캡처(stills). 모두 1600px 화면을 1.5배로 찍어 2400px 폭입니다.
+const CLIPS = { look:{n:248,w:2400}, verify:{n:193,w:2400} };
+const STILL_W = 2400;
+// view: 1600px 화면 기준 [x, y, 폭] (높이 = 폭×9/16), 처음 → 끝으로 천천히 이동
+const SCENES = [
+  { id:'s-hero', dur:5.4 },
+  { id:'s-lessons', dur:6.0 },
+  { id:'s-look', dur:7.6, img:'v-look', segs:[ { clip:'look', from:0.6, rate:1, len:7.6, view:[[0,0,1600],[0,60,1500]] } ] },
+  { id:'s-verify', dur:6.4, img:'v-verify', segs:[ { clip:'verify', from:0.5, rate:1, len:6.4, view:[[0,0,1600],[80,40,1300]] } ] },
+  { id:'s-library', dur:6.0, img:'v-library', segs:[ { still:'library', len:6.0, view:[[0,0,1600],[150,330,1150]] } ] },
+  { id:'s-ai', dur:7.0, img:'v-ai', segs:[ { still:'ai', len:7.0, view:[[0,0,1600],[300,520,1250]] } ] },
+  { id:'s-words', dur:6.4, img:'v-words', segs:[
+      { still:'words', len:3.2, view:[[220,420,1300],[260,560,1200]] },
+      { still:'relations', len:3.2, view:[[280,740,1250],[300,800,1150]] } ] },
+  { id:'s-museum', dur:7.2, img:'v-museum', segs:[ { still:'museum', len:7.2, view:[[0,0,1600],[0,1550,1600]] } ] },
+  { id:'s-teacher', dur:5.2, img:'v-teacher', segs:[ { still:'teacher', len:5.2, view:[[0,0,1600],[80,560,1450]] } ] },
+  { id:'s-outro', dur:6.0 },
+];
+const XF = 0.6;
+let acc = 0; for (const s of SCENES) { s.start = acc; acc += s.dur - XF; }
+const TOTAL = acc + XF;
+window.TOTAL = TOTAL; window.SCENES = SCENES;
+function src(seg, t) {
+  if (seg.still) return `stills/${seg.still}.jpg`;
+  const c = CLIPS[seg.clip]; const i = Math.max(1, Math.min(c.n, Math.round((seg.from + t * seg.rate) * FPS) + 1));
+  return `frames/${seg.clip}/${String(i).padStart(5,'0')}.jpg`;
+}
+async function setImg(el, url) { if (el.dataset.src === url) return; el.dataset.src = url; el.src = url; try { await el.decode(); } catch {} }
+const SUBS = [
+  [0.5,4.6,'삼국과 가야 사람들은 어떻게 살았을까요? 답은 유물 속에 있어요.'],
+  [5.0,10.0,'MOAKIT 5class는 사회와 AI를 잇는 초등 5학년 10차시 역사 탐구 수업이에요.'],
+  [10.4,13.8,'먼저 교과서 속 여섯 유물을 큰 화면에 띄워 함께 살펴봐요.'],
+  [14.0,17.0,'무엇이 보이는지 말하며 생활의 단서를 찾고, 질문을 만들어요.'],
+  [17.4,22.8,'“이 문장, 정말 사실일까?” 교과서와 공식 자료로 직접 확인해요.'],
+  [23.2,28.2,'자료실에서는 나라별 유물을 골라 두 자료를 나란히 비교해요.'],
+  [28.6,34.4,'우리 모둠의 분류와 AI의 분류를 견주며, 왜 다른지 스스로 따져 봐요.'],
+  [35.0,40.4,'자료 속 낱말을 세어 보고, 유물과 생활을 관계도로 이어요.'],
+  [40.8,46.8,'마지막에는 출처를 확인한 해설로 우리 모둠만의 역사관을 열어요.'],
+  [47.4,51.6,'선생님께는 40분 운영안과 차시별 지도안, A4 활동지를 드려요.'],
+  [52.0,57.2,'AI는 돕고, 판단은 우리가. 설치 없이 브라우저에서 바로 시작하세요.'],
+];
+window.SUBS = SUBS;
+window.render = async function (t) {
+  { const cur = SUBS.find(x => t >= x[0] && t <= x[1]); const el = document.getElementById('sub');
+    if (cur) { el.textContent = cur[2]; el.parentElement.style.opacity = Math.min(clamp((t-cur[0])/0.25), clamp((cur[1]-t)/0.25)); el.style.visibility='visible'; }
+    else el.style.visibility='hidden'; }
+  document.getElementById('prog').style.width = (t / TOTAL * 100) + '%';
+  document.getElementById('grid').style.transform = `translate(${-(t*6)%80}px, ${-(t*3)%80}px)`;
+  const waits = [];
+  for (const s of SCENES) {
+    const el = document.getElementById(s.id);
+    const lt = t - s.start;
+    if (lt < -0.01 || lt > s.dur + 0.01) { el.style.opacity = 0; el.style.display = 'none'; continue; }
+    el.style.display = '';
+    const fin = s === SCENES[0] ? 1 : clamp(lt / XF), fout = s === SCENES.at(-1) ? clamp((s.dur - lt) / 0.8) : clamp((s.dur - lt) / XF);
+    el.style.opacity = Math.min(fin, fout);
+    el.querySelectorAll('[data-in]').forEach(a => { const p = eout(clamp((lt - parseFloat(a.dataset.in)) / 0.7)); a.style.opacity = p; a.style.transform = `translateY(${(1 - p) * 34}px)`; });
+    el.querySelectorAll('[data-float]').forEach(a => { const k = +a.dataset.float; const p = eout(clamp((lt - 0.4 - k * 0.25) / 1.0));
+      a.style.opacity = p; a.style.transform = `translate(${(1-p)*120}px, ${Math.sin(lt*0.9 + k*1.7)*8 + (1-p)*30}px) rotate(${[-3,2.5,-1.5,3][k]}deg) scale(${lerp(.92,1,p)})`; });
+    const win = el.querySelector('[data-win]');
+    if (win) { const p = eout(clamp((lt - 0.15) / 0.9)); win.style.opacity = p; win.style.transform = `translateY(${(1-p)*50}px) scale(${lerp(.96,1,p)})`; }
+    el.querySelectorAll('.tag').forEach(tg => { const p = eout(clamp((lt-1.8)/0.6)); tg.style.opacity = p; tg.style.transform = `translateY(${(1-p)*20}px)`; });
+    if (s.segs) {
+      let off = 0, seg = s.segs[0], segStart = 0;
+      for (const g of s.segs) { if (lt >= off) { seg = g; segStart = off; } off += g.len; }
+      const st = clamp(lt - segStart, 0, seg.len);
+      const img = document.getElementById(s.img);
+      const bw = img.parentElement.clientWidth;
+      const k = ease(clamp(st / seg.len));
+      const [a, b] = seg.view;
+      const vx = lerp(a[0], b[0], k), vy = lerp(a[1], b[1], k), vw = lerp(a[2], b[2], k);
+      const sc = bw / vw, w = seg.still ? STILL_W : CLIPS[seg.clip].w, pxScale = 1600 / w;
+      img.style.width = w + 'px';
+      img.style.transform = `translate(${-vx*sc}px, ${-vy*sc}px) scale(${sc*pxScale})`;
+      // 두 장면 사이 전환 시 살짝 페이드
+      img.style.opacity = s.segs.length > 1 ? Math.min(1, clamp(st/0.3) + (seg === s.segs[0] ? 1 : 0), clamp((seg.len - st)/0.3) + (seg === s.segs.at(-1) ? 1 : 0)) : 1;
+      waits.push(setImg(img, src(seg, st)));
+    }
+  }
+  await Promise.all(waits);
+};
+</script>
+</body></html>
