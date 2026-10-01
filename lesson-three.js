@@ -19,16 +19,19 @@ const art=id=>artifacts.find(a=>a.id===id);
 const stepOf=count=>count<firstGoal?0:count<groupGoal?1:2;
 let shownStep=-1;
 
-let state=load(),rows=[],message='',loading=false,big=false,timer=null;
+let state=load(),rows=cached(),message='',boardError='',loaded=false,loading=false,big=false,timer=null;
 let draft={artifact:'',sentence:'',original:'',source:'',status:'사실 확인'};
 
 function load(){try{const v=JSON.parse(localStorage.getItem(STORE)||'{}');return {code:/^[0-9a-z]{4,12}$/.test(v.code||'')?v.code:'',group:Number.isInteger(v.group)&&v.group>=0&&v.group<=6?v.group:null,author:/^[a-f0-9]{64}$/.test(v.author||'')?v.author:''};}catch{return {code:'',group:null,author:''};}}
 function keep(){try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
+// 인터넷이 잠깐 끊겨도 마지막으로 불러온 문장판을 계속 보여 줍니다.
+function cached(){try{const v=JSON.parse(localStorage.getItem(`${STORE}-rows`)||'{}');return v.code===load().code&&Array.isArray(v.rows)?v.rows:[];}catch{return [];}}
+function cache(){try{localStorage.setItem(`${STORE}-rows`,JSON.stringify({code:state.code,rows}));}catch{}}
 function token(){return Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');}
 async function rpc(name,body){
  let response;
- try{response=await fetch(API+name,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:`Bearer ${KEY}`},body:JSON.stringify(body)});}
- catch{throw Error('인터넷 연결을 확인하고 다시 눌러 주세요.');}
+ try{response=await fetch(API+name,{method:'POST',signal:AbortSignal.timeout(10000),headers:{'Content-Type':'application/json',apikey:KEY,Authorization:`Bearer ${KEY}`},body:JSON.stringify(body)});}
+ catch{throw Error('인터넷 연결이 느려요. 잠시 뒤 ‘문장판 다시 불러오기’를 눌러 주세요.');}
  if(!response.ok)throw Error('문장판에 연결하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
  const value=await response.json();
  if(value&&value.error)throw Error(value.error);
@@ -76,13 +79,13 @@ function formView(){
 
 function boardView(){
  const counts=groupCounts(rows);
- return `${state.group===0?`<p class="c3-assign"><b>새 유물</b>${groups.map(g=>`<span>${g}모둠 ${shortNames[newArtifacts[g]]} ${art(newArtifacts[g]).page}쪽</span>`).join('')}</p>`:''}<div class="c3-board-head"><h2>우리 반 문장판 <small>${rows.length}문장</small></h2><div>${state.group?`<button class="quiet small" type="button" data-c3="big">${big?'작은 화면':'큰 화면'}</button>`:''}<button class="quiet small" type="button" data-c3="refresh">${loading?'불러오는 중':'문장판 다시 불러오기'}</button></div></div><div class="c3-groups">${groups.map((g,i)=>`<section class="c3-group ${g===state.group?'is-mine':''}"><h3>${g}모둠 <small>${counts[i]} / ${groupGoal}</small></h3>${counts[i]?`<ol>${rows.filter(r=>r.group===g).map(r=>`<li><span class="c3-tag">${e(r.artifact)}</span>${r.status==='고친 문장'&&r.original?`<p class="c3-was"><span>원래</span><s>${e(r.original)}</s></p><p class="c3-now"><span>고친 문장</span>${e(r.sentence)}</p>`:`<p>${e(r.sentence)}</p>`}<small>${r.source?e(r.source)+' · ':''}<b class="c3-status" data-status="${e(r.status)}">${e(r.status)}</b></small>${r.mine?`<button class="quiet small" type="button" data-c3="remove" data-id="${e(r.id)}">지우기</button>`:''}</li>`).join('')}</ol>`:'<p class="c3-empty">아직 올린 문장이 없어요.</p>'}</section>`).join('')}</div>`;
+ return `${state.group===0?`<p class="c3-assign"><b>새 유물</b>${groups.map(g=>`<span>${g}모둠 ${shortNames[newArtifacts[g]]} ${art(newArtifacts[g]).page}쪽</span>`).join('')}</p>`:''}<div class="c3-board-head"><h2>우리 반 문장판 <small>${rows.length}문장</small></h2><div>${state.group?`<button class="quiet small" type="button" data-c3="big">${big?'작은 화면':'큰 화면'}</button>`:''}<button class="quiet small" type="button" data-c3="refresh">${loading?'불러오는 중':'문장판 다시 불러오기'}</button></div></div>${boardError?`<p class="c3-message" role="alert">${e(boardError)}${rows.length?' 마지막으로 불러온 문장을 보여 주고 있어요.':''}</p>`:''}${!rows.length&&!loaded?'<p class="c3-guide">문장판을 불러오는 중이에요…</p>':''}<div class="c3-groups">${groups.map((g,i)=>`<section class="c3-group ${g===state.group?'is-mine':''}"><h3>${g}모둠 <small>${counts[i]} / ${groupGoal}</small></h3>${counts[i]?`<ol>${rows.filter(r=>r.group===g).map(r=>`<li><span class="c3-tag">${e(r.artifact)}</span>${r.status==='고친 문장'&&r.original?`<p class="c3-was"><span>원래</span><s>${e(r.original)}</s></p><p class="c3-now"><span>고친 문장</span>${e(r.sentence)}</p>`:`<p>${e(r.sentence)}</p>`}<small>${r.source?e(r.source)+' · ':''}<b class="c3-status" data-status="${e(r.status)}">${e(r.status)}</b></small>${r.mine?`<button class="quiet small" type="button" data-c3="remove" data-id="${e(r.id)}">지우기</button>`:''}</li>`).join('')}</ol>`:'<p class="c3-empty">아직 올린 문장이 없어요.</p>'}</section>`).join('')}</div>`;
 }
 
 function render(root){
  if(!joined()){root.innerHTML=`<div class="c3-page">${joinView()}</div>`;return;}
  const teacher=state.group===0;
- root.innerHTML=`<div class="c3-page ${big||teacher?'c3-fit':''}"><div class="c3-bar"><p>수업코드 <b>${e(state.code)}</b> · <b>${teacher?'선생님 화면':state.group+'모둠'}</b></p><button class="quiet small" type="button" data-c3="leave">나가기</button></div>${teacher||big?'':formView()}<section class="c3-board" id="c3-board">${boardView()}</section></div>`;
+ root.innerHTML=`<div class="c3-page ${big||teacher?'c3-fit':''}"><div class="c3-bar"><p>수업코드 <b>${e(state.code)}</b> · <b>${teacher?'선생님 화면':state.group+'모둠'}</b>${teacher||big?'':' · <a href="#c3-board" data-c3="jump">문장판 보기 ↓</a>'}</p><button class="quiet small" type="button" data-c3="leave">나가기</button></div>${teacher||big?'':formView()}<section class="c3-board" id="c3-board">${boardView()}</section></div>`;
  fit(root);
 }
 // 큰 화면에서는 모든 문장이 스크롤 없이 한 화면에 들어오도록 글자 크기를 줄입니다.
@@ -102,8 +105,8 @@ const paintBoard=root=>{
 async function refresh(root){
  if(!joined()||loading)return;
  loading=true;
- try{const value=await rpc('class5_list',{p_code:state.code,p_author:state.author});rows=Array.isArray(value.sentences)?value.sentences:[];}
- catch(error){message=error.message;}
+ try{const value=await rpc('class5_list',{p_code:state.code,p_author:state.author});rows=Array.isArray(value.sentences)?value.sentences:[];boardError='';loaded=true;cache();}
+ catch(error){boardError=error.message;}
  finally{loading=false;if(root.isConnected)paintBoard(root);}
 }
 
@@ -123,7 +126,7 @@ export function mountLessonThree(root,source){
    const code=String(data.code||'').trim().toLowerCase(),teacher=event.submitter?.name==='teacher';
    if(!/^[0-9a-z]{4,12}$/.test(code)){message='수업코드는 숫자 4~12자리로 입력해 주세요.';return render(root);}
    if(!teacher&&!data.group){message='우리 모둠을 골라 주세요.';state.code=code;return render(root);}
-   state={code,group:teacher?0:Number(data.group),author:state.author||token()};keep();message='';big=false;rows=[];render(root);refresh(root);return;
+   if(code!==state.code){rows=[];loaded=false;}state={code,group:teacher?0:Number(data.group),author:state.author||token()};keep();message='';boardError='';big=false;render(root);refresh(root);return;
   }
   if(form.dataset.c3Form==='add'){
    const button=form.querySelector('button[type=submit]');
@@ -139,8 +142,9 @@ export function mountLessonThree(root,source){
  root.addEventListener('click',async event=>{
   const el=event.target.closest('[data-c3]');if(!el)return;
   const action=el.dataset.c3;
-  if(action==='leave'){state={code:state.code,group:null,author:state.author};keep();rows=[];message='';big=false;render(root);}
+  if(action==='leave'){state={code:state.code,group:null,author:state.author};keep();message='';boardError='';big=false;render(root);}
   if(action==='refresh')refresh(root);
+  if(action==='jump'){event.preventDefault();root.querySelector('#c3-board')?.scrollIntoView({behavior:'smooth'});}
   if(action==='big'){big=!big;render(root);}
   if(action==='remove'&&confirm('이 문장을 문장판에서 지울까요?')){
    try{await rpc('class5_remove',{p_code:state.code,p_id:el.dataset.id,p_author:state.author});rows=rows.filter(r=>r.id!==el.dataset.id);paintBoard(root);}
