@@ -1,6 +1,7 @@
 import {escapeHtml as e} from './model.js';
 import {artifacts,coreArtifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
+import {verificationSets} from './lesson-two-data.js';
 
 // 3차시: 수업코드로 입장한 모둠이 검증한 문장을 우리 반 문장판에 올립니다.
 const API='https://awjndrxyyqyngybulyor.supabase.co/rest/v1/rpc/';
@@ -29,6 +30,10 @@ export function groupCounts(list){return groups.map(g=>list.filter(r=>r.group===
 
 const joined=()=>state.code&&state.group!==null&&state.author;
 const nameFor=id=>artifacts.find(a=>a.id===id)?.name||'';
+// 2차시 유물마다 '거짓'인 학습용 문장은 하나뿐이므로 원래 문장으로 미리 넣어 줍니다.
+const wrongSentence=name=>{const id=observationIds.find(key=>nameFor(key)===name);return verificationSets[id]?.claims.find(c=>c.result==='거짓')?.text||'';};
+let autoOriginal='';
+function suggestOriginal(){if(draft.status!=='고친 문장')return;const next=wrongSentence(draft.artifact);if(!draft.original.trim()||draft.original===autoOriginal){draft.original=next;autoOriginal=next;}}
 
 function joinView(){
  return `<section class="c3-card c3-join"><p class="c3-kicker">3차시 · 우리 반 문장 모으기</p><h1>수업코드를 넣고 입장해요</h1><p class="c3-lead">2차시에 검증한 문장을 우리 반 문장판에 올립니다.</p><form data-c3-form="join"><label class="field"><span>수업코드</span><input name="code" inputmode="numeric" autocomplete="off" maxlength="12" value="${e(state.code)}" placeholder="선생님이 알려 준 숫자" required></label><fieldset class="c3-choices c3-group-pick"><legend>우리 모둠</legend>${groups.map(g=>`<label><input type="radio" name="group" value="${g}" ${state.group===g?'checked':''}><span>${g}모둠</span></label>`).join('')}</fieldset><button class="primary c3-wide" type="submit">입장하기</button><button class="quiet c3-wide" type="submit" name="teacher" value="1">선생님 · 문장판만 보기</button></form>${message?`<p class="c3-message" role="alert">${e(message)}</p>`:''}</section>`;
@@ -38,7 +43,7 @@ function formView(){
  const mine=rows.filter(r=>r.group===state.group).length;
  const fixed=draft.status==='고친 문장';
  const options=coreArtifacts.map(a=>`<option ${draft.artifact===a.name?'selected':''}>${e(a.name)}</option>`).join('');
- return `<section class="c3-card"><div class="c3-form-head"><h2>검증한 문장 올리기</h2><p class="c3-goal"><b>${mine}</b> / ${groupGoal}문장</p></div><form data-c3-form="add"><label class="field"><span>1. 어떤 유물인가요?</span><select name="artifact">${options}</select></label><fieldset class="c3-choices c3-status-pick"><legend>2. 어떤 문장인가요?</legend>${sentenceStatuses.map(([s,help])=>`<label><input type="radio" name="status" value="${s}" ${draft.status===s?'checked':''}><span><b>${s}</b><small>${help}</small></span></label>`).join('')}</fieldset>${fixed?`<label class="field c3-original"><span>3. 틀렸던 원래 문장</span><textarea name="original" rows="2" maxlength="300" placeholder="예: 토우는 쇠를 녹여 만든 조각이다." required>${e(draft.original)}</textarea></label><label class="field"><span>4. 자료에 맞게 고친 문장</span><textarea name="sentence" rows="2" maxlength="300" placeholder="예: 토우는 흙으로 사람이나 동물 모습을 만든 것이다." required>${e(draft.sentence)}</textarea></label>`:`<label class="field"><span>3. 검증한 문장</span><textarea name="sentence" rows="3" maxlength="300" placeholder="예: 집 모양 토기는 흙으로 만들었다." required>${e(draft.sentence)}</textarea></label>`}<label class="field"><span>${fixed?5:4}. 확인한 자료</span><input name="source" maxlength="100" value="${e(draft.source)}" placeholder="예: 교과서 28쪽"></label><button class="primary c3-wide" type="submit">문장판에 올리기</button></form>${message?`<p class="c3-message" role="alert">${e(message)}</p>`:''}<details class="c3-help"><summary>무엇을 올리나요?</summary><p>2차시 활동지에서 <b>우리 질문의 답 1개</b>와 <b>검증한 문장 3개</b>를 올립니다. 틀렸던 문장은 ‘고친 문장’을 고르고 원래 문장과 고친 문장을 함께 적습니다. 판단하기 어려웠던 문장은 ‘판단 보류’를 고릅니다. 남은 시간에는 선생님이 정해 준 새 유물의 문장을 교과서에서 확인해 3개 더 올립니다.</p></details></section>`;
+ return `<section class="c3-card"><div class="c3-form-head"><h2>검증한 문장 올리기</h2><p class="c3-goal"><b>${mine}</b> / ${groupGoal}문장</p></div><form data-c3-form="add"><label class="field"><span>1. 어떤 유물인가요?</span><select name="artifact">${options}</select></label><fieldset class="c3-choices c3-status-pick"><legend>2. 어떤 문장인가요?</legend>${sentenceStatuses.map(([s,help])=>`<label><input type="radio" name="status" value="${s}" ${draft.status===s?'checked':''}><span><b>${s}</b><small>${help}</small></span></label>`).join('')}</fieldset>${fixed?`<label class="field c3-original"><span>3. 틀렸던 원래 문장</span><textarea name="original" rows="2" maxlength="300" placeholder="예: 토우는 쇠를 녹여 만든 조각이다." required>${e(draft.original)}</textarea>${draft.original&&draft.original===autoOriginal?'<small class="c3-hint">2차시 활동지에서 ‘거짓’이었던 문장을 넣어 두었어요. 다르면 고쳐 쓰세요.</small>':''}</label><label class="field"><span>4. 자료에 맞게 고친 문장</span><textarea name="sentence" rows="2" maxlength="300" placeholder="예: 토우는 흙으로 사람이나 동물 모습을 만든 것이다." required>${e(draft.sentence)}</textarea></label>`:`<label class="field"><span>3. 검증한 문장</span><textarea name="sentence" rows="3" maxlength="300" placeholder="예: 집 모양 토기는 흙으로 만들었다." required>${e(draft.sentence)}</textarea></label>`}<label class="field"><span>${fixed?5:4}. 확인한 자료</span><input name="source" maxlength="100" value="${e(draft.source)}" placeholder="예: 교과서 28쪽"></label><button class="primary c3-wide" type="submit">문장판에 올리기</button></form>${message?`<p class="c3-message" role="alert">${e(message)}</p>`:''}<details class="c3-help"><summary>무엇을 올리나요?</summary><p>2차시 활동지에서 <b>우리 질문의 답 1개</b>와 <b>검증한 문장 3개</b>를 올립니다. 틀렸던 문장은 ‘고친 문장’을 고르고 원래 문장과 고친 문장을 함께 적습니다. 판단하기 어려웠던 문장은 ‘판단 보류’를 고릅니다. 남은 시간에는 선생님이 정해 준 새 유물의 문장을 교과서에서 확인해 3개 더 올립니다.</p></details></section>`;
 }
 
 function boardView(){
@@ -68,7 +73,7 @@ export function mountLessonThree(root,source){
  timer=setInterval(()=>{if(!root.isConnected)return clearInterval(timer);if(document.visibilityState==='visible')refresh(root);},8000);
  refresh(root);
  root.addEventListener('input',event=>{const el=event.target;if(el.form?.dataset.c3Form==='add'&&el.name in draft&&el.type!=='radio')draft[el.name]=el.value;});
- root.addEventListener('change',event=>{const el=event.target;if(el.form?.dataset.c3Form==='add'&&el.name in draft){draft[el.name]=el.value;if(el.name==='status'){render(root);root.querySelector(`input[name=status][value="${el.value}"]`)?.focus();}}});
+ root.addEventListener('change',event=>{const el=event.target;if(el.form?.dataset.c3Form==='add'&&el.name in draft){draft[el.name]=el.value;if(el.name==='status'||el.name==='artifact')suggestOriginal();if(el.name==='status'||(el.name==='artifact'&&draft.status==='고친 문장')){render(root);root.querySelector(el.name==='status'?`input[name=status][value="${el.value}"]`:'select[name=artifact]')?.focus();}}});
  root.addEventListener('submit',async event=>{
   event.preventDefault();
   const form=event.target,data=Object.fromEntries(new FormData(form));
@@ -85,7 +90,7 @@ export function mountLessonThree(root,source){
    if(fixed&&!draft.original.trim()){message='틀렸던 원래 문장을 적어 주세요.';return render(root);}
    if(!draft.sentence.trim()){message=fixed?'자료에 맞게 고친 문장을 적어 주세요.':'검증한 문장을 적어 주세요.';return render(root);}
    button.disabled=true;button.textContent='올리는 중…';
-   try{await rpc('class5_add',{p_code:state.code,p_group:state.group,p_artifact:draft.artifact,p_sentence:draft.sentence.trim(),p_source:draft.source.trim(),p_status:draft.status,p_author:state.author,p_original:fixed?draft.original.trim():''});draft.sentence='';draft.original='';draft.source='';message='';render(root);await refresh(root);root.querySelector('textarea[name=sentence]')?.focus();}
+   try{await rpc('class5_add',{p_code:state.code,p_group:state.group,p_artifact:draft.artifact,p_sentence:draft.sentence.trim(),p_source:draft.source.trim(),p_status:draft.status,p_author:state.author,p_original:fixed?draft.original.trim():''});draft.sentence='';draft.original='';autoOriginal='';suggestOriginal();draft.source='';message='';render(root);await refresh(root);root.querySelector('textarea[name=sentence]')?.focus();}
    catch(error){message=error.message;render(root);}
   }
  });
