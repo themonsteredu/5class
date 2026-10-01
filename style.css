@@ -103,3 +103,5 @@
 .c3-fit .c3-group li p{font-size:var(--c3-size);line-height:1.45;margin:2px 0}.c3-fit .c3-was{font-size:calc(var(--c3-size)*.8)!important}.c3-fit .c3-tag,.c3-fit .c3-group li small,.c3-fit .c3-empty{font-size:calc(var(--c3-size)*.62)}
 @media(max-width:1000px){.c3-fit .c3-groups{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.c3-steps{grid-template-columns:1fr}.c3-research{grid-template-columns:1fr}}
+
+.c3-claims{margin:0 0 18px}.c3-claims h3{font-size:19px;margin-bottom:8px}.c3-claims ol{list-style:none;padding:0;margin:0;display:grid;gap:10px}.c3-claims li{border:1px solid var(--line);border-radius:8px;padding:12px 14px}.c3-claims li.is-done{background:#f1f6ec}.c3-claims li p{font-size:17px;margin-bottom:8px}.c3-claims li p span{display:inline-block;font-size:12px;font-weight:700;background:#eef1e9;border-radius:4px;padding:1px 7px;margin-right:8px;vertical-align:2px}.c3-claims li div{display:flex;flex-wrap:wrap;gap:8px}.c3-check{color:#2f6b3a;font-size:14px}.c3-bonus-claims{font-size:15px;margin:0 0 12px}

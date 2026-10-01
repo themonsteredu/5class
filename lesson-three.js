@@ -2,16 +2,17 @@ import {escapeHtml as e} from './model.js';
 import {artifacts,coreArtifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
 import {verificationSets} from './lesson-two-data.js';
+import {extraSets} from './lesson-three-data.js';
 
 // 3차시: 수업코드로 입장한 모둠이 검증한 문장을 우리 반 문장판에 올립니다.
 const API='https://awjndrxyyqyngybulyor.supabase.co/rest/v1/rpc/';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3am5kcnh5eXF5bmd5YnVseW9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTEwMTUsImV4cCI6MjA5OTg4NzAxNX0.9G8aCw9jG8eSmeUaLOSiD0Fl34GpOD44XVOqTwCMWa4';
 const STORE='moakit-5class-l3';
 export const sentenceStatuses=[['사실 확인','자료로 맞다고 확인한 문장'],['고친 문장','틀린 문장을 자료에 맞게 고친 문장'],['판단 보류','자료로는 맞는지 알 수 없는 문장']];
-export const groupGoal=7;
+export const groupGoal=6;
 const groups=[1,2,3,4,5,6];
 // 2차시 문장 4개를 올린 모둠은 아직 아무도 조사하지 않은 교과서 유물을 하나씩 맡습니다.
-const firstGoal=4;
+const firstGoal=3;
 export const newArtifacts={1:'kitchen',2:'dancers',3:'gold-crown',4:'buddha',5:'seosan',6:'glass'};
 const bonusArtifacts=['guests','belt'];
 const shortNames={kitchen:'부엌·고기 창고 그림',dancers:'춤추는 사람들 그림','gold-crown':'황남대총 금관',buddha:'연가 7년명 금동 불상',seosan:'서산 마애여래 삼존상',glass:'신라 유리 제품'};
@@ -51,18 +52,25 @@ function joinView(){
 }
 
 function stepsView(step,count){
- const items=[['2차시 문장 올리기',`${Math.min(count,firstGoal)} / ${firstGoal}`],['새 유물 문장 더 올리기',`${Math.max(0,Math.min(count-firstGoal,groupGoal-firstGoal))} / ${groupGoal-firstGoal}`],['문장판 함께 보기','']];
+ const items=[['2차시 문장 올리기',`${Math.min(count,firstGoal)} / ${firstGoal}`],['새 유물 문장 확인하기',`${Math.max(0,Math.min(count-firstGoal,groupGoal-firstGoal))} / ${groupGoal-firstGoal}`],['문장판 함께 보기','']];
  return `<ol class="c3-steps">${items.map(([t,c],i)=>`<li class="${i<step?'is-done':i===step?'is-now':''}"><span>${i<step?'✓':i+1}</span><b>${t}</b>${c?`<small>${c}</small>`:''}</li>`).join('')}</ol>`;
 }
 function researchCard(a,label){
  return `<section class="c3-research"><img src="assets/images/${e(a.image)}" alt="${e(a.name)}"><div><p class="c3-kicker">${label}</p><h2>${e(a.name)}</h2><p class="c3-meta">${e(a.nation)} · 교과서 ${a.page}쪽</p><p class="c3-fact">${e(a.fact)}</p><p class="c3-caution">이렇게 단정하지 않아요: ${e(a.caution)}</p><small>사진: ${e(a.credit)}</small></div></section>`;
 }
 function guideView(step){
- if(step===0)return `<p class="c3-guide">2차시 활동지에서 <b>우리 질문의 답 1개</b>와 <b>검증한 문장 3개</b>를 올려요.</p>`;
+ if(step===0)return `<p class="c3-guide">2차시 활동지 2쪽에서 <b>검증한 문장 3개</b>를 올려요. 틀렸던 문장은 ‘고친 문장’을 골라요.</p>`;
  const a=art(newArtifacts[state.group]);
- if(step===1)return `${researchCard(a,'우리 모둠이 새로 맡은 유물')}<p class="c3-guide">교과서 ${a.page}쪽 사진과 위 설명을 읽고, <b>사진에서 본 것 1개</b>와 <b>설명에서 알게 된 것 2개</b>를 내 말로 써서 올려요. 짐작한 내용은 ‘판단 보류’를 골라요.</p>`;
- return `<p class="c3-guide c3-done"><b>우리 모둠 ${groupGoal}문장 완성!</b> 아래 문장판에서 다른 모둠 문장을 읽고 <b>‘처음 알게 된 문장’ 하나</b>를 골라 두세요.</p><details class="c3-bonus"><summary>더 올리고 싶다면 · 보너스 유물</summary>${bonusArtifacts.map(id=>researchCard(art(id),'보너스 유물')).join('')}</details>`;
+ if(step===1)return `${researchCard(a,'우리 모둠이 새로 맡은 유물')}${claimsView(newArtifacts[state.group])}`;
+ return `<p class="c3-guide c3-done"><b>우리 모둠 ${groupGoal}문장 완성!</b> 아래 문장판에서 다른 모둠 문장을 읽고 <b>‘처음 알게 된 문장’ 하나</b>를 골라 두세요.</p><details class="c3-bonus"><summary>더 올리고 싶다면 · 보너스 유물</summary>${bonusArtifacts.map(id=>researchCard(art(id),'보너스 유물')+bonusClaims(id)).join('')}</details>`;
 }
+// 새 유물의 확인할 문장 3개: 카드와 교과서를 보고 판단한 뒤 고르면 아래 입력 칸이 채워집니다.
+function claimsView(id){
+ const set=extraSets[id];if(!set)return '';
+ const done=text=>rows.some(r=>r.group===state.group&&(r.sentence===text||r.original===text));
+ return `<section class="c3-claims"><h3>확인할 문장 3개</h3><p class="c3-guide">위 카드와 교과서를 읽고 문장마다 판단을 골라요. 고르면 아래 칸이 채워지고, <b>문장판에 올리기</b>를 누르면 끝이에요.</p><ol>${set.claims.map((c,i)=>`<li class="${done(c.text)?'is-done':''}"><p><span>문장 ${i+1}</span>${e(c.text)}${done(c.text)?' <b class="c3-check">✓ 올림</b>':''}</p><div>${[['사실 확인','맞아요'],['고친 문장','틀려서 고칠래요'],['판단 보류','자료로 알 수 없어요']].map(([s,label])=>`<button class="quiet small" type="button" data-c3="claim" data-i="${i}" data-status="${s}">${label}</button>`).join('')}</div></li>`).join('')}</ol></section>`;
+}
+function bonusClaims(id){return `<ol class="c3-bonus-claims">${extraSets[id].claims.map(c=>`<li>${e(c.text)}</li>`).join('')}</ol>`;}
 function syncStep(){
  const step=stepOf(rows.filter(r=>r.group===state.group).length);
  if(step===1&&shownStep!==1){const a=art(newArtifacts[state.group]);Object.assign(draft,{artifact:a.name,status:'사실 확인',original:'',source:`교과서 ${a.page}쪽`});}
@@ -144,6 +152,12 @@ export function mountLessonThree(root,source){
   const action=el.dataset.c3;
   if(action==='leave'){state={code:state.code,group:null,author:state.author};keep();message='';boardError='';big=false;render(root);}
   if(action==='refresh')refresh(root);
+  if(action==='claim'){
+   const a=art(newArtifacts[state.group]),c=extraSets[newArtifacts[state.group]]?.claims[Number(el.dataset.i)];if(!c)return;
+   const fixed=el.dataset.status==='고친 문장';
+   Object.assign(draft,{artifact:a.name,status:el.dataset.status,original:fixed?c.text:'',sentence:fixed?'':c.text,source:`교과서 ${a.page}쪽`});autoOriginal=fixed?c.text:'';message='';render(root);
+   const target=root.querySelector(fixed?'textarea[name=sentence]':'[data-c3-form=add] button[type=submit]');target?.scrollIntoView({behavior:'smooth',block:'center'});if(fixed)target?.focus();
+  }
   if(action==='jump'){event.preventDefault();root.querySelector('#c3-board')?.scrollIntoView({behavior:'smooth'});}
   if(action==='big'){big=!big;render(root);}
   if(action==='remove'&&confirm('이 문장을 문장판에서 지울까요?')){
@@ -157,4 +171,8 @@ export function mountLessonThree(root,source){
 export function thirdWorksheet(source,school,group){
  const name=nameFor(source);
  return `<article class="worksheet printable"><header><span>${e(school)||'MOAKIT'} · AI × 사회</span><span>5학년 · 3차시</span></header><h2>우리 반 문장판에 올릴 문장</h2><p>모둠: ${e(group)||'____________'}　이름: ____________　날짜: ____________</p>${name?`<p class="worksheet-question">2차시 유물: ${e(name)}</p>`:''}<p>2차시 활동지에서 우리 질문의 답 1개와 검증한 문장 3개를 옮기고, 새로 맡은 유물의 문장 3개를 더 적습니다.</p>${[1,2,3,4,5,6,7].map(n=>`<section><h3>${n}. 유물 / 문장 / 확인한 자료 / 사실 확인 · 고친 문장 · 판단 보류</h3><div class="writing-lines"></div></section>`).join('')}</article>`;
+}
+
+export function thirdAnswers(){
+ return `<h2>교사용 정답·근거 · 3차시 새 유물</h2><p>학생이 판단을 고른 뒤 함께 확인합니다. 판단은 교과서와 카드의 설명을 기준으로 합니다. ‘판단하기 어려움’ 문장은 사실처럼 고쳐 쓰지 않습니다.</p>${[...groups.map(g=>[g+'모둠',newArtifacts[g]]),...bonusArtifacts.map(id=>['보너스',id])].map(([who,id])=>{const a=art(id);return `<h3>${who} · ${e(a.name)} (교과서 ${a.page}쪽)</h3><ol class="l2-teacher-answers">${extraSets[id].claims.map(c=>`<li><p>${e(c.text)}</p><p><b>${e(c.result)}</b> · ${e(c.reason)}</p>${c.fix?`<p>고친 문장 예시: ${e(c.fix)}</p>`:''}</li>`).join('')}</ol>`;}).join('')}`;
 }
