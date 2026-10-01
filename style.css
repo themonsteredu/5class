@@ -91,3 +91,4 @@
 .c3-big .c3-groups{gap:20px}.c3-big .c3-group li p{font-size:21px}.c3-big .c3-group h3{font-size:23px}.c3-big .c3-tag{font-size:14px}
 @media(max-width:900px){.c3-groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.c3-page{padding:16px}.c3-card{padding:20px}.c3-groups,.c3-status-pick{grid-template-columns:1fr}.c3-join h1{font-size:24px}}
+.c3-original textarea{background:#fbf6f3}.c3-was{font-size:14px!important;color:var(--muted)}.c3-was s{text-decoration-color:#b5523f}.c3-was span,.c3-now span{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:2px}.c3-was span{background:#f5e3de;color:#8a3a2e}.c3-now span{background:#f3ead5;color:#8a5a12}.c3-big .c3-was{font-size:17px!important}

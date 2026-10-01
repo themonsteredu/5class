@@ -11,7 +11,7 @@ export const groupGoal=7;
 const groups=[1,2,3,4,5,6];
 
 let state=load(),rows=[],message='',loading=false,big=false,timer=null;
-let draft={artifact:'',sentence:'',source:'',status:'사실 확인'};
+let draft={artifact:'',sentence:'',original:'',source:'',status:'사실 확인'};
 
 function load(){try{const v=JSON.parse(localStorage.getItem(STORE)||'{}');return {code:/^[0-9a-z]{4,12}$/.test(v.code||'')?v.code:'',group:Number.isInteger(v.group)&&v.group>=0&&v.group<=6?v.group:null,author:/^[a-f0-9]{64}$/.test(v.author||'')?v.author:''};}catch{return {code:'',group:null,author:''};}}
 function keep(){try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
@@ -36,13 +36,14 @@ function joinView(){
 
 function formView(){
  const mine=rows.filter(r=>r.group===state.group).length;
+ const fixed=draft.status==='고친 문장';
  const options=coreArtifacts.map(a=>`<option ${draft.artifact===a.name?'selected':''}>${e(a.name)}</option>`).join('');
- return `<section class="c3-card"><div class="c3-form-head"><h2>검증한 문장 올리기</h2><p class="c3-goal"><b>${mine}</b> / ${groupGoal}문장</p></div><form data-c3-form="add"><label class="field"><span>1. 어떤 유물인가요?</span><select name="artifact">${options}</select></label><label class="field"><span>2. 검증한 문장</span><textarea name="sentence" rows="3" maxlength="300" placeholder="예: 집 모양 토기는 흙으로 만들었다." required>${e(draft.sentence)}</textarea></label><label class="field"><span>3. 확인한 자료</span><input name="source" maxlength="100" value="${e(draft.source)}" placeholder="예: 교과서 28쪽"></label><fieldset class="c3-choices c3-status-pick"><legend>4. 이 문장은?</legend>${sentenceStatuses.map(([s,help])=>`<label><input type="radio" name="status" value="${s}" ${draft.status===s?'checked':''}><span><b>${s}</b><small>${help}</small></span></label>`).join('')}</fieldset><button class="primary c3-wide" type="submit">문장판에 올리기</button></form>${message?`<p class="c3-message" role="alert">${e(message)}</p>`:''}<details class="c3-help"><summary>무엇을 올리나요?</summary><p>2차시 활동지에서 <b>우리 질문의 답 1개</b>와 <b>검증한 문장 3개</b>를 올립니다. 틀렸던 문장은 고친 문장으로 올리고, 판단하기 어려웠던 문장은 ‘판단 보류’를 고릅니다. 남은 시간에는 선생님이 정해 준 새 유물의 문장을 교과서에서 확인해 3개 더 올립니다.</p></details></section>`;
+ return `<section class="c3-card"><div class="c3-form-head"><h2>검증한 문장 올리기</h2><p class="c3-goal"><b>${mine}</b> / ${groupGoal}문장</p></div><form data-c3-form="add"><label class="field"><span>1. 어떤 유물인가요?</span><select name="artifact">${options}</select></label><fieldset class="c3-choices c3-status-pick"><legend>2. 어떤 문장인가요?</legend>${sentenceStatuses.map(([s,help])=>`<label><input type="radio" name="status" value="${s}" ${draft.status===s?'checked':''}><span><b>${s}</b><small>${help}</small></span></label>`).join('')}</fieldset>${fixed?`<label class="field c3-original"><span>3. 틀렸던 원래 문장</span><textarea name="original" rows="2" maxlength="300" placeholder="예: 토우는 쇠를 녹여 만든 조각이다." required>${e(draft.original)}</textarea></label><label class="field"><span>4. 자료에 맞게 고친 문장</span><textarea name="sentence" rows="2" maxlength="300" placeholder="예: 토우는 흙으로 사람이나 동물 모습을 만든 것이다." required>${e(draft.sentence)}</textarea></label>`:`<label class="field"><span>3. 검증한 문장</span><textarea name="sentence" rows="3" maxlength="300" placeholder="예: 집 모양 토기는 흙으로 만들었다." required>${e(draft.sentence)}</textarea></label>`}<label class="field"><span>${fixed?5:4}. 확인한 자료</span><input name="source" maxlength="100" value="${e(draft.source)}" placeholder="예: 교과서 28쪽"></label><button class="primary c3-wide" type="submit">문장판에 올리기</button></form>${message?`<p class="c3-message" role="alert">${e(message)}</p>`:''}<details class="c3-help"><summary>무엇을 올리나요?</summary><p>2차시 활동지에서 <b>우리 질문의 답 1개</b>와 <b>검증한 문장 3개</b>를 올립니다. 틀렸던 문장은 ‘고친 문장’을 고르고 원래 문장과 고친 문장을 함께 적습니다. 판단하기 어려웠던 문장은 ‘판단 보류’를 고릅니다. 남은 시간에는 선생님이 정해 준 새 유물의 문장을 교과서에서 확인해 3개 더 올립니다.</p></details></section>`;
 }
 
 function boardView(){
  const counts=groupCounts(rows);
- return `<div class="c3-board-head"><h2>우리 반 문장판 <small>${rows.length}문장</small></h2><div>${state.group?`<button class="quiet small" type="button" data-c3="big">${big?'작은 화면':'큰 화면'}</button>`:''}<button class="quiet small" type="button" data-c3="refresh">${loading?'불러오는 중':'새로고침'}</button></div></div><div class="c3-groups">${groups.map((g,i)=>`<section class="c3-group ${g===state.group?'is-mine':''}"><h3>${g}모둠 <small>${counts[i]}문장</small></h3>${counts[i]?`<ol>${rows.filter(r=>r.group===g).map(r=>`<li><span class="c3-tag">${e(r.artifact)}</span><p>${e(r.sentence)}</p><small>${r.source?e(r.source)+' · ':''}<b class="c3-status" data-status="${e(r.status)}">${e(r.status)}</b></small>${r.mine?`<button class="quiet small" type="button" data-c3="remove" data-id="${e(r.id)}">지우기</button>`:''}</li>`).join('')}</ol>`:'<p class="c3-empty">아직 올린 문장이 없어요.</p>'}</section>`).join('')}</div>`;
+ return `<div class="c3-board-head"><h2>우리 반 문장판 <small>${rows.length}문장</small></h2><div>${state.group?`<button class="quiet small" type="button" data-c3="big">${big?'작은 화면':'큰 화면'}</button>`:''}<button class="quiet small" type="button" data-c3="refresh">${loading?'불러오는 중':'새로고침'}</button></div></div><div class="c3-groups">${groups.map((g,i)=>`<section class="c3-group ${g===state.group?'is-mine':''}"><h3>${g}모둠 <small>${counts[i]}문장</small></h3>${counts[i]?`<ol>${rows.filter(r=>r.group===g).map(r=>`<li><span class="c3-tag">${e(r.artifact)}</span>${r.status==='고친 문장'&&r.original?`<p class="c3-was"><span>원래</span><s>${e(r.original)}</s></p><p class="c3-now"><span>고친 문장</span>${e(r.sentence)}</p>`:`<p>${e(r.sentence)}</p>`}<small>${r.source?e(r.source)+' · ':''}<b class="c3-status" data-status="${e(r.status)}">${e(r.status)}</b></small>${r.mine?`<button class="quiet small" type="button" data-c3="remove" data-id="${e(r.id)}">지우기</button>`:''}</li>`).join('')}</ol>`:'<p class="c3-empty">아직 올린 문장이 없어요.</p>'}</section>`).join('')}</div>`;
 }
 
 function render(root){
@@ -67,7 +68,7 @@ export function mountLessonThree(root,source){
  timer=setInterval(()=>{if(!root.isConnected)return clearInterval(timer);if(document.visibilityState==='visible')refresh(root);},8000);
  refresh(root);
  root.addEventListener('input',event=>{const el=event.target;if(el.form?.dataset.c3Form==='add'&&el.name in draft&&el.type!=='radio')draft[el.name]=el.value;});
- root.addEventListener('change',event=>{const el=event.target;if(el.form?.dataset.c3Form==='add'&&el.name in draft)draft[el.name]=el.value;});
+ root.addEventListener('change',event=>{const el=event.target;if(el.form?.dataset.c3Form==='add'&&el.name in draft){draft[el.name]=el.value;if(el.name==='status'){render(root);root.querySelector(`input[name=status][value="${el.value}"]`)?.focus();}}});
  root.addEventListener('submit',async event=>{
   event.preventDefault();
   const form=event.target,data=Object.fromEntries(new FormData(form));
@@ -79,10 +80,12 @@ export function mountLessonThree(root,source){
   }
   if(form.dataset.c3Form==='add'){
    const button=form.querySelector('button[type=submit]');
-   Object.assign(draft,{artifact:data.artifact||draft.artifact,sentence:String(data.sentence||''),source:String(data.source||''),status:data.status||draft.status});
-   if(!draft.sentence.trim()){message='검증한 문장을 적어 주세요.';return render(root);}
+   Object.assign(draft,{artifact:data.artifact||draft.artifact,sentence:String(data.sentence||''),original:String(data.original??draft.original),source:String(data.source||''),status:data.status||draft.status});
+   const fixed=draft.status==='고친 문장';
+   if(fixed&&!draft.original.trim()){message='틀렸던 원래 문장을 적어 주세요.';return render(root);}
+   if(!draft.sentence.trim()){message=fixed?'자료에 맞게 고친 문장을 적어 주세요.':'검증한 문장을 적어 주세요.';return render(root);}
    button.disabled=true;button.textContent='올리는 중…';
-   try{await rpc('class5_add',{p_code:state.code,p_group:state.group,p_artifact:draft.artifact,p_sentence:draft.sentence.trim(),p_source:draft.source.trim(),p_status:draft.status,p_author:state.author});draft.sentence='';draft.source='';message='';render(root);await refresh(root);root.querySelector('textarea[name=sentence]')?.focus();}
+   try{await rpc('class5_add',{p_code:state.code,p_group:state.group,p_artifact:draft.artifact,p_sentence:draft.sentence.trim(),p_source:draft.source.trim(),p_status:draft.status,p_author:state.author,p_original:fixed?draft.original.trim():''});draft.sentence='';draft.original='';draft.source='';message='';render(root);await refresh(root);root.querySelector('textarea[name=sentence]')?.focus();}
    catch(error){message=error.message;render(root);}
   }
  });
