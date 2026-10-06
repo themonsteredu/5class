@@ -122,3 +122,12 @@
 .c4-steps-list{line-height:2}.c4-prompt{width:100%;margin-top:12px;font-size:13px;border:1px solid #cbd3ca;border-radius:6px;padding:10px}
 .c4-tv{max-width:none}.c4-tv .c4-sorts{grid-template-columns:repeat(6,minmax(0,1fr))}.c4-tv .c4-bin{font-size:15px}.c4-tv .c4-nations li{font-size:15px}
 @media(max-width:800px){.c4-tabs{grid-template-columns:repeat(2,1fr)}.c4-arts,.c4-sorts,.c4-nations{grid-template-columns:1fr}.c4-tv .c4-sorts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.c4-team-pick{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}.c4-team-pick>span{font-weight:700;margin-right:6px}
+.c4-team{font-size:13px;color:var(--muted);margin-bottom:6px}
+.c4-board-list{list-style:none;padding:0;margin:0 0 20px;display:grid;gap:8px}.c4-board-list li{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:15px;line-height:1.7}.c4-board-list s,.c4-nations s{color:var(--muted);text-decoration-color:#b5523f}
+.c4-own{border-top:1px solid var(--line);padding-top:12px}
+.c4-face{position:relative;font-size:56px;line-height:1}.c4-face i{position:absolute;right:-6px;bottom:-4px;font-size:22px;font-style:normal}
+.c4-robot-head>button{margin-left:auto}
+.c4-ask-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.c4-ask-row button{min-height:54px;font-size:17px}.c4-mic.is-on{background:#fbeee9;border-color:#c68e86;color:#8a3a2e}
+.c4-copy{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+@media(max-width:600px){.c4-ask-row{grid-template-columns:1fr}}
