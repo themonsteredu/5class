@@ -16,23 +16,24 @@ const firstGoal=3;
 export const newArtifacts={1:'kitchen',2:'dancers',3:'gold-crown',4:'buddha',5:'seosan',6:'glass'};
 const bonusArtifacts=['guests','belt'];
 const shortNames={kitchen:'부엌·고기 창고 그림',dancers:'춤추는 사람들 그림','gold-crown':'황남대총 금관',buddha:'연가 7년명 금동 불상',seosan:'서산 마애여래 삼존상',glass:'신라 유리 제품'};
-const art=id=>artifacts.find(a=>a.id===id);
+export const art=id=>artifacts.find(a=>a.id===id);
 const stepOf=count=>count<firstGoal?0:count<groupGoal?1:2;
 let shownStep=-1;
 
 let state=load(),rows=cached(),message='',boardError='',loaded=false,loading=false,big=false,timer=null;
 let draft={artifact:'',sentence:'',original:'',source:'',status:'사실 확인'};
 
-function load(){try{const v=JSON.parse(localStorage.getItem(STORE)||'{}');return {code:/^[0-9a-z]{4,12}$/.test(v.code||'')?v.code:'',group:Number.isInteger(v.group)&&v.group>=0&&v.group<=6?v.group:null,author:/^[a-f0-9]{64}$/.test(v.author||'')?v.author:''};}catch{return {code:'',group:null,author:''};}}
-function keep(){try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
+export function load(){try{const v=JSON.parse(localStorage.getItem(STORE)||'{}');return {code:/^[0-9a-z]{4,12}$/.test(v.code||'')?v.code:'',group:Number.isInteger(v.group)&&v.group>=0&&v.group<=6?v.group:null,author:/^[a-f0-9]{64}$/.test(v.author||'')?v.author:''};}catch{return {code:'',group:null,author:''};}}
+function keep(){saveSession(state);}
+export function saveSession(value){try{localStorage.setItem(STORE,JSON.stringify(value));}catch{}}
 // 인터넷이 잠깐 끊겨도 마지막으로 불러온 문장판을 계속 보여 줍니다.
 function cached(){try{const v=JSON.parse(localStorage.getItem(`${STORE}-rows`)||'{}');return v.code===load().code&&Array.isArray(v.rows)?v.rows:[];}catch{return [];}}
 function cache(){try{localStorage.setItem(`${STORE}-rows`,JSON.stringify({code:state.code,rows}));}catch{}}
-function token(){return Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');}
-async function rpc(name,body){
+export function token(){return Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');}
+export async function rpc(name,body){
  let response;
  try{response=await fetch(API+name,{method:'POST',signal:AbortSignal.timeout(10000),headers:{'Content-Type':'application/json',apikey:KEY,Authorization:`Bearer ${KEY}`},body:JSON.stringify(body)});}
- catch{throw Error('인터넷 연결이 느려요. 잠시 뒤 ‘문장판 다시 불러오기’를 눌러 주세요.');}
+ catch{throw Error('인터넷 연결이 느려요. 잠시 뒤 ‘다시 불러오기’를 눌러 주세요.');}
  if(!response.ok)throw Error('문장판에 연결하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
  const value=await response.json();
  if(value&&value.error)throw Error(value.error);
@@ -120,6 +121,7 @@ async function refresh(root){
 
 export function mountLessonThree(root,source){
  fitRoot=root;
+ const fresh=load();if(fresh.code!==state.code||fresh.group!==state.group){state=fresh;rows=cached();loaded=false;shownStep=-1;}
  if(!draft.artifact)draft.artifact=nameFor(observationIds.includes(source)?source:'')||coreArtifacts[0].name;
  message='';render(root);
  clearInterval(timer);
