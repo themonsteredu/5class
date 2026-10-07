@@ -1,14 +1,13 @@
 import {escapeHtml as e} from './model.js';
 import {artifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
-import {load,saveSession,token,rpc,newArtifacts} from './lesson-three.js';
+import {loadSession as load,saveSession,token,rpc,loadRoom,saveSort,setTeam,teach as teachRobot,forget} from './lesson-four-store.js';
 import {askNationRobot,nationPrompt,nations,defaultTeams} from './robot.js';
 
 // 4차시: 3차시 문장판의 유물을 우리 기준으로 나누고, 나라별 역사 로봇에게 우리 반 검증 문장을 가르칩니다.
 export const fourthSteps=['우리 기준으로 나누기','나라 로봇 가르치기','로봇에게 묻기','진짜 AI와 비교하기'];
 const fourthTimes=[15,10,12,3];
 const groups=[1,2,3,4,5,6];
-const bonusIds=['guests','belt'];
 const art=id=>artifacts.find(a=>a.id===id);
 const nameOf=id=>art(id)?.name||id;
 const who=g=>g===0?'선생님':`${g}모둠`;
@@ -23,13 +22,13 @@ export const criterionExamples=[
  ['우리가 얼마나 확실히 아나','사실 확인이 많은 유물 / 고친 문장이 있는 유물 / 판단 보류가 많은 유물','3차시 문장판이 근거가 돼요.']
 ];
 
-let session=load(),tab=0,sentences=[],sorts=[],teams=[],facts=[],loaded=false,error='',notice='',timer=null;
+let session=load(),tab=0,sentences=[],sorts=[],teams=[],facts=[],roomRows=[],loaded=false,error='',notice='',timer=null;
 let draft=null,own={artifact:'',status:'사실 확인',sentence:'',original:''},robotNation='',chats={},voiceOn=true,listening=false,teacherNation='고구려',trapOpen=false;
 const blankOwn=()=>({artifact:'',status:'사실 확인',sentence:'',original:''});
 
 const joined=()=>session.code&&session.group!==null&&session.author;
 const teacher=()=>session.group===0;
-function boardIds(){const named=new Set(sentences.map(s=>artifacts.find(a=>a.name===s.artifact)?.id).filter(Boolean));return [...observationIds,...Object.values(newArtifacts),...bonusIds.filter(id=>named.has(id))];}
+function boardIds(){const named=new Set(sentences.map(s=>artifacts.find(a=>a.name===s.artifact)?.id).filter(Boolean));const ids=artifacts.filter(a=>named.has(a.id)).map(a=>a.id);return ids.length?ids:[...observationIds];}
 const sentencesOf=id=>sentences.filter(s=>s.artifact===nameOf(id));
 const statusMark={'사실 확인':'✓','고친 문장':'✎','판단 보류':'?'};
 
@@ -60,7 +59,14 @@ function sortsView(){
 }
 
 
-const myNation=()=>teams.find(t=>t.group===session.group)?.nation||defaultTeams[session.group]||'고구려';
+// 로봇 나라: 모둠이 고른 나라 → 3차시에 처음 올린 문장들의 유물 나라 → 기본 배정 순서로 정합니다.
+function boardNation(group){
+ const ids=sentences.filter(s=>s.group===group).slice(0,3).map(s=>idOfName(s.artifact)).filter(Boolean);if(!ids.length)return '';
+ const count={};ids.forEach(id=>count[id]=(count[id]||0)+1);
+ return nationOf(ids.reduce((best,id)=>count[id]>count[best]?id:best,ids[0]));
+}
+const teamOf=g=>teams.find(t=>t.group===g)?.nation||boardNation(g)||defaultTeams[g]||'고구려';
+const myNation=()=>teamOf(session.group);
 const nationOf=id=>art(id)?.nation||'';
 const idOfName=name=>artifacts.find(a=>a.name===name)?.id||'';
 const robotFacts=n=>facts.filter(f=>f.nation===n);
@@ -71,7 +77,7 @@ function factLine(f,removable=true){
  return `<li><span class="c3-status" data-status="${e(f.status)}">${statusMark[f.status]||''} ${e(f.status)}</span> ${f.artifact?`<span class="c3-tag">${e(nameOf(f.artifact))}</span> `:''}${statusLine(f)} <small>${who(f.group)}</small>${removable&&f.mine?` <button class="quiet small" type="button" data-c4="forget" data-id="${e(f.id)}">지우기</button>`:''}</li>`;
 }
 function robotsView(){
- return `<div class="c3-board-head"><h2>나라 로봇이 배운 문장</h2></div><div class="c4-nations">${nations.map(n=>{const list=robotFacts(n),team=groups.filter(g=>(teams.find(t=>t.group===g)?.nation||defaultTeams[g])===n);return `<section class="c3-group ${!teacher()&&n===myNation()?'is-mine':''}"><h3>${robotFace[n]} ${n} 로봇 <small>${list.length}문장</small></h3><p class="c4-team">${team.map(g=>`${g}모둠`).join(' · ')||'맡은 모둠 없음'}</p>${list.length?`<ul>${list.map(f=>factLine(f)).join('')}</ul>`:'<p class="c3-empty">아직 배운 문장이 없어요.</p>'}</section>`;}).join('')}</div>`;
+ return `<div class="c3-board-head"><h2>나라 로봇이 배운 문장</h2></div><div class="c4-nations">${nations.map(n=>{const list=robotFacts(n),team=groups.filter(g=>teamOf(g)===n);return `<section class="c3-group ${!teacher()&&n===myNation()?'is-mine':''}"><h3>${robotFace[n]} ${n} 로봇 <small>${list.length}문장</small></h3><p class="c4-team">${team.map(g=>`${g}모둠`).join(' · ')||'맡은 모둠 없음'}</p>${list.length?`<ul>${list.map(f=>factLine(f)).join('')}</ul>`:'<p class="c3-empty">아직 배운 문장이 없어요.</p>'}</section>`;}).join('')}</div>`;
 }
 function ownForm(nation){
  const ids=boardIds().filter(id=>nationOf(id)===nation),fixed=own.status==='고친 문장';
@@ -108,9 +114,9 @@ function paintLive(root){
 async function refresh(root,full=false){
  if(!joined())return;
  try{
-  const [list,sortList,robots]=await Promise.all([full||!loaded?rpc('class5_list',{p_code:session.code,p_author:session.author}):null,rpc('class5_sort_list',{p_code:session.code}),rpc('class5_robot_list',{p_code:session.code,p_author:session.author})]);
+  const [list,room]=await Promise.all([full||!loaded?rpc('class5_list',{p_code:session.code,p_author:session.author}):null,loadRoom(session.code,session.author)]);
   if(list)sentences=Array.isArray(list.sentences)?list.sentences:[];
-  sorts=Array.isArray(sortList.sorts)?sortList.sorts:[];teams=Array.isArray(robots.teams)?robots.teams:[];facts=Array.isArray(robots.facts)?robots.facts:[];
+  ({sorts,teams,facts,rows:roomRows}=room);
   const first=!loaded;loaded=true;error='';
   if(first&&draft&&!draft.dirty)draft=null;
   if(first)return render(root);
@@ -176,7 +182,7 @@ export function mountLessonFour(root){
    const nation=teacher()?teacherNation:myNation();
    if(!own.sentence.trim()){error='가르칠 문장을 적어 주세요.';return render(root);}
    if(own.status==='고친 문장'&&!own.original.trim()){error='틀렸던 원래 문장도 적어 주세요.';return render(root);}
-   try{await rpc('class5_robot_teach',{p_code:session.code,p_group:session.group,p_nation:nation,p_artifact:own.artifact,p_sentence:own.sentence.trim(),p_original:own.status==='고친 문장'?own.original.trim():'',p_status:own.status,p_source:null,p_author:session.author});
+   try{await teachRobot(session.code,session.author,session.group,{nation,artifact:own.artifact,sentence:own.sentence.trim(),original:own.original.trim(),status:own.status,source:''});
     own={...own,sentence:'',original:''};error='';notice=`${nation} 로봇이 새 문장을 배웠어요!`;await refresh(root);render(root);}
    catch(err){error=err.message;render(root);}
   }
@@ -196,21 +202,22 @@ export function mountLessonFour(root){
    const bins=draft.bins.filter(b=>b.name.trim()).map(b=>({name:b.name.trim(),items:b.items}));
    if(!draft.criterion.trim()){error='우리 기준을 적어 주세요.';return render(root);}
    if(!bins.length){error='묶음 이름을 하나 이상 지어 주세요.';return render(root);}
-   try{await rpc('class5_sort_save',{p_code:session.code,p_group:session.group,p_criterion:draft.criterion.trim(),p_bins:bins,p_author:session.author});draft.dirty=false;error='';notice='우리 분류를 저장했어요. TV에서 다른 모둠과 비교해 봐요.';await refresh(root);render(root);}
+   try{await saveSort(session.code,session.author,session.group,draft.criterion.trim(),bins,roomRows);draft.dirty=false;error='';notice='우리 분류를 저장했어요. TV에서 다른 모둠과 비교해 봐요.';await refresh(root);render(root);}
    catch(err){error=err.message;render(root);}
   }
   if(action==='team'){
-   try{await rpc('class5_team_set',{p_code:session.code,p_group:session.group,p_nation:el.dataset.nation,p_author:session.author});teams=[...teams.filter(t=>t.group!==session.group),{group:session.group,nation:el.dataset.nation}];robotNation='';own.artifact='';error='';render(root);}
+   try{await setTeam(session.code,session.author,session.group,el.dataset.nation,roomRows);teams=[...teams.filter(t=>t.group!==session.group),{group:session.group,nation:el.dataset.nation}];robotNation='';own.artifact='';error='';render(root);}
    catch(err){error=err.message;render(root);}
   }
   if(action==='teach'){
    const s=sentences.find(x=>x.id===el.dataset.id);if(!s)return;
    el.disabled=true;
-   try{await rpc('class5_robot_teach',{p_code:session.code,p_group:session.group,p_nation:myNation(),p_artifact:idOfName(s.artifact),p_sentence:s.sentence,p_original:s.original||'',p_status:s.status,p_source:s.id,p_author:session.author});error='';notice='';await refresh(root);const y=window.scrollY;render(root);window.scrollTo(0,y);}
+   if(facts.some(f=>f.nation===myNation()&&f.source===s.id)){el.disabled=false;return;}
+   try{await teachRobot(session.code,session.author,session.group,{nation:myNation(),artifact:idOfName(s.artifact),sentence:s.sentence,original:s.original||'',status:s.status,source:s.id});error='';notice='';await refresh(root);const y=window.scrollY;render(root);window.scrollTo(0,y);}
    catch(err){error=err.message;render(root);}
   }
   if(action==='forget'&&confirm('로봇이 이 문장을 잊게 할까요?')){
-   try{await rpc('class5_robot_forget',{p_code:session.code,p_id:el.dataset.id,p_author:session.author});facts=facts.filter(f=>f.id!==el.dataset.id);paintLive(root);}
+   try{await forget(session.code,session.author,el.dataset.id);facts=facts.filter(f=>f.id!==el.dataset.id);paintLive(root);}
    catch(err){error=err.message;render(root);}
   }
   if(action==='robot'){robotNation=el.dataset.nation;render(root);}
