@@ -293,7 +293,12 @@ const textbookArtifacts = [
   }
 ];
 // 이전 작업 파일에 저장된 자료는 그대로 읽되 새 수업·자료실에서는 제외합니다.
-export const artifacts = [...textbookArtifacts,...legacyArtifacts.map(a=>({...a,core:false,archived:a.id==='tomb',theme:'추가 탐구',imageNote:'추가 탐구 사진 · 교과서 본문 사진과 구분해 살펴보세요.'}))];
+// 교과서 밖 자료: 가야처럼 교과서 유물이 적은 나라를 3차시 새 유물로 보충합니다.
+export const outsideArtifacts=[
+ {id:'ingot',name:'가야의 덩이쇠',nation:'가야',page:null,kind:'철 재료',material:'철',theme:'기술과 교류',fact:'가야 사람들이 철을 납작한 판 모양으로 만든 것입니다. 철로 된 도구를 만드는 재료로 쓰였고, 다른 나라와 물건을 바꿀 때에도 쓰였다고 알려져 있습니다.',observe:'양쪽 끝이 넓어지는 납작한 모양을 살펴보세요.',caution:'덩이쇠가 돈처럼 쓰였다는 설명만으로 모든 가야 사람이 덩이쇠로 물건을 샀다고 할 수는 없습니다.',period:'삼국·가야 시대',image:'gaya-ingot.svg',imageNote:'설명용 그림 · 실제 사진이 아닙니다.',credit:'설명용 그림 · 실제 유물은 국립김해박물관에서 확인',creditUrl:'https://gimhae.museum.go.kr/',source:'교과서 밖 자료 · 국립김해박물관',url:'https://gimhae.museum.go.kr/',core:false,outside:true},
+ {id:'tombs',name:'가야 고분군',nation:'가야',page:null,kind:'무덤 유적',material:'흙',theme:'기술과 교류',fact:'가야 사람들이 만든 큰 무덤들이 언덕에 모여 있는 곳입니다. 김해 대성동, 고령 지산동 등 7곳의 가야 고분군은 2023년 유네스코 세계유산이 되었습니다.',observe:'언덕 위에 둥근 무덤이 줄지어 있는 모습을 살펴보세요.',caution:'무덤의 크기만으로 무덤 주인이 누구였는지 정할 수는 없습니다.',period:'삼국·가야 시대',image:'gaya-tombs.svg',imageNote:'설명용 그림 · 실제 사진이 아닙니다.',credit:'설명용 그림 · 실제 모습은 국가유산청 자료에서 확인',creditUrl:'https://www.heritage.go.kr/',source:'교과서 밖 자료 · 국가유산청',url:'https://www.heritage.go.kr/',core:false,outside:true}
+];
+export const artifacts = [...textbookArtifacts,...outsideArtifacts,...legacyArtifacts.map(a=>({...a,core:false,archived:a.id==='tomb',theme:'추가 탐구',imageNote:'추가 탐구 사진 · 교과서 본문 사진과 구분해 살펴보세요.'}))];
 export const activeArtifacts=artifacts.filter(a=>!a.archived);
 export const coreArtifacts=artifacts.filter(a=>a.core);
 export const themes=['전체','음식과 집','옷차림과 신분','옷차림과 놀이','종교와 믿음','기술과 교류'];
