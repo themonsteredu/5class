@@ -20,8 +20,19 @@ const art=id=>artifacts.find(a=>a.id===id);
 const idOfName=name=>artifacts.find(a=>a.name===name)?.id||'';
 const claimsFor=id=>extraSets[id]?.claims||verificationSets[id]?.claims||[];
 // 모둠의 첫 문장(2차시 유물)의 나라를 보고, 같은 나라에서 아직 조사하지 않은 유물을 새로 맡깁니다.
-function firstArtifact(group){const r=rows.find(x=>x.group===group);return r?idOfName(r.artifact):'';}
+// 첫 문장들(2차시 문장) 가운데 가장 많이 고른 유물을 그 모둠의 유물로 봅니다.
+function firstArtifact(group){
+ const ids=rows.filter(x=>x.group===group).slice(0,firstGoal).map(r=>idOfName(r.artifact)).filter(Boolean);
+ if(!ids.length)return '';
+ const count={};ids.forEach(id=>count[id]=(count[id]||0)+1);
+ return ids.reduce((best,id)=>count[id]>count[best]?id:best,ids[0]);
+}
+// 새 유물이 맞지 않으면 모둠 태블릿에서 직접 바꿀 수 있습니다.
+const pickKey=()=>`${STORE}-pick-${state.code}-${state.group}`;
+function picked(){try{return localStorage.getItem(pickKey())||'';}catch{return '';}}
+function pick(id){try{localStorage.setItem(pickKey(),id);}catch{}}
 export function assignedArtifact(group){
+ if(group===state.group&&claimsFor(picked()).length)return picked();
  const own=firstArtifact(group),nation=art(own)?.nation;
  if(!nation)return newArtifacts[group];
  const owned=new Set(groups.map(firstArtifact).filter(Boolean));
@@ -76,7 +87,7 @@ function researchCard(a,label){
 function guideView(step){
  if(step===0)return `<p class="c3-guide">2차시 활동지 2쪽에서 <b>검증한 문장 3개</b>를 올려요. 틀렸던 문장은 ‘고친 문장’을 골라요.</p>`;
  const a=art(assignedArtifact(state.group));
- if(step===1)return `${researchCard(a,`우리 모둠이 새로 맡은 ${a.nation} 유물`)}${claimsView(a.id)}`;
+ if(step===1)return `${researchCard(a,`우리 모둠이 새로 맡은 ${a.nation} 유물`)}<details class="c3-pick"><summary>새 유물이 우리 나라와 다르면 여기서 바꿔요</summary><label class="field"><span>새로 맡을 유물</span><select data-c3-pick>${['고구려','백제','신라','가야'].map(n=>`<optgroup label="${n}">${coreArtifacts.filter(x=>x.nation===n&&claimsFor(x.id).length).map(x=>`<option value="${x.id}" ${x.id===a.id?'selected':''}>${e(x.name)}</option>`).join('')}</optgroup>`).join('')}</select></label></details>${claimsView(a.id)}`;
  return `<p class="c3-guide c3-done"><b>우리 모둠 ${groupGoal}문장 완성!</b> 아래 문장판에서 다른 모둠 문장을 읽고 <b>‘처음 알게 된 문장’ 하나</b>를 골라 두세요.</p><details class="c3-bonus"><summary>더 올리고 싶다면 · 보너스 유물</summary>${bonusArtifacts.map(id=>researchCard(art(id),'보너스 유물')+bonusClaims(id)).join('')}</details>`;
 }
 // 새 유물의 확인할 문장 3개: 카드와 교과서를 보고 판단한 뒤 고르면 아래 입력 칸이 채워집니다.
@@ -96,7 +107,7 @@ function formView(){
  const step=syncStep();
  const mine=rows.filter(r=>r.group===state.group).length;
  const fixed=draft.status==='고친 문장';
- const options=coreArtifacts.map(a=>`<option ${draft.artifact===a.name?'selected':''}>${e(a.name)}</option>`).join('');
+ const options=`<option value="">유물을 골라 주세요</option>`+coreArtifacts.map(a=>`<option ${draft.artifact===a.name?'selected':''}>${e(a.name)}</option>`).join('');
  return `<section class="c3-card">${stepsView(step,mine)}${guideView(step)}<div class="c3-form-head"><h2>문장 올리기</h2><p class="c3-goal"><b>${mine}</b> / ${groupGoal}문장</p></div><form data-c3-form="add"><label class="field"><span>1. 어떤 유물인가요?</span><select name="artifact">${options}</select></label><fieldset class="c3-choices c3-status-pick"><legend>2. 어떤 문장인가요?</legend>${sentenceStatuses.map(([s,help])=>`<label><input type="radio" name="status" value="${s}" ${draft.status===s?'checked':''}><span><b>${s}</b><small>${help}</small></span></label>`).join('')}</fieldset>${fixed?`<label class="field c3-original"><span>3. 틀렸던 원래 문장</span><textarea name="original" rows="2" maxlength="300" placeholder="예: 토우는 쇠를 녹여 만든 조각이다." required>${e(draft.original)}</textarea>${draft.original&&draft.original===autoOriginal?'<small class="c3-hint">2차시 활동지에서 ‘거짓’이었던 문장을 넣어 두었어요. 다르면 고쳐 쓰세요.</small>':''}</label><label class="field"><span>4. 자료에 맞게 고친 문장</span><textarea name="sentence" rows="2" maxlength="300" placeholder="예: 토우는 흙으로 사람이나 동물 모습을 만든 것이다." required>${e(draft.sentence)}</textarea></label>`:`<label class="field"><span>3. 검증한 문장</span><textarea name="sentence" rows="3" maxlength="300" placeholder="예: 집 모양 토기는 흙으로 만들었다." required>${e(draft.sentence)}</textarea></label>`}<label class="field"><span>${fixed?5:4}. 확인한 자료</span><input name="source" maxlength="100" value="${e(draft.source)}" placeholder="예: 교과서 28쪽"></label><button class="primary c3-wide" type="submit">문장판에 올리기</button></form>${message?`<p class="c3-message" role="alert">${e(message)}</p>`:''}</section>`;
 }
 
@@ -135,13 +146,13 @@ async function refresh(root){
 
 export function mountLessonThree(root,source){
  fitRoot=root;
- if(!draft.artifact)draft.artifact=nameFor(observationIds.includes(source)?source:'')||coreArtifacts[0].name;
+ if(!draft.artifact)draft.artifact=nameFor(observationIds.includes(source)?source:'');
  message='';render(root);
  clearInterval(timer);
  timer=setInterval(()=>{if(!root.isConnected)return clearInterval(timer);if(document.visibilityState==='visible')refresh(root);},8000);
  refresh(root);
  root.addEventListener('input',event=>{const el=event.target;if(el.form?.dataset.c3Form==='add'&&el.name in draft&&el.type!=='radio')draft[el.name]=el.value;});
- root.addEventListener('change',event=>{const el=event.target;if(el.form?.dataset.c3Form==='add'&&el.name in draft){draft[el.name]=el.value;if(el.name==='status'||el.name==='artifact')suggestOriginal();if(el.name==='status'||(el.name==='artifact'&&draft.status==='고친 문장')){render(root);root.querySelector(el.name==='status'?`input[name=status][value="${el.value}"]`:'select[name=artifact]')?.focus();}}});
+ root.addEventListener('change',event=>{const el=event.target;if(el.matches('[data-c3-pick]')){pick(el.value);shownStep=-1;message='';render(root);return;}if(el.form?.dataset.c3Form==='add'&&el.name in draft){draft[el.name]=el.value;if(el.name==='status'||el.name==='artifact')suggestOriginal();if(el.name==='status'||(el.name==='artifact'&&draft.status==='고친 문장')){render(root);root.querySelector(el.name==='status'?`input[name=status][value="${el.value}"]`:'select[name=artifact]')?.focus();}}});
  root.addEventListener('submit',async event=>{
   event.preventDefault();
   const form=event.target,data=Object.fromEntries(new FormData(form));
@@ -149,13 +160,14 @@ export function mountLessonThree(root,source){
    const code=String(data.code||'').trim().toLowerCase(),teacher=event.submitter?.name==='teacher';
    if(!/^[0-9a-z]{4,12}$/.test(code)){message='수업코드는 숫자 4~12자리로 입력해 주세요.';return render(root);}
    if(!teacher&&!data.group){message='우리 모둠을 골라 주세요.';state.code=code;return render(root);}
-   if(code!==state.code){rows=[];loaded=false;}state={code,group:teacher?0:Number(data.group),author:state.author||token()};keep();message='';boardError='';big=false;render(root);refresh(root);return;
+   if(code!==state.code){rows=[];loaded=false;}if(code!==state.code||(teacher?0:Number(data.group))!==state.group){draft={artifact:'',sentence:'',original:'',source:'',status:'사실 확인'};shownStep=-1;}state={code,group:teacher?0:Number(data.group),author:state.author||token()};keep();message='';boardError='';big=false;render(root);refresh(root);return;
   }
   if(form.dataset.c3Form==='add'){
    const button=form.querySelector('button[type=submit]');
    Object.assign(draft,{artifact:data.artifact||draft.artifact,sentence:String(data.sentence||''),original:String(data.original??draft.original),source:String(data.source||''),status:data.status||draft.status});
    const fixed=draft.status==='고친 문장';
    if(fixed&&!draft.original.trim()){message='틀렸던 원래 문장을 적어 주세요.';return render(root);}
+   if(!draft.artifact){message='어떤 유물인지 골라 주세요.';return render(root);}
    if(!draft.sentence.trim()){message=fixed?'자료에 맞게 고친 문장을 적어 주세요.':'검증한 문장을 적어 주세요.';return render(root);}
    button.disabled=true;button.textContent='올리는 중…';
    try{await rpc('class5_add',{p_code:state.code,p_group:state.group,p_artifact:draft.artifact,p_sentence:draft.sentence.trim(),p_source:draft.source.trim(),p_status:draft.status,p_author:state.author,p_original:fixed?draft.original.trim():''});draft.sentence='';draft.original='';autoOriginal='';suggestOriginal();draft.source='';message='';render(root);await refresh(root);root.querySelector('textarea[name=sentence]')?.focus();}
