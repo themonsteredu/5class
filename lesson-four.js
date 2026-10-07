@@ -1,11 +1,11 @@
 import {escapeHtml as e} from './model.js';
 import {artifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
-import {loadSession as load,saveSession,token,rpc,loadRoom,saveSort,setTeam,teach as teachRobot,forget} from './lesson-four-store.js';
-import {askNationRobot,nationPrompt,nations,defaultTeams} from './robot.js';
+import {loadSession as load,saveSession,token,rpc,loadRoom,saveSort,teach as teachRobot,forget} from './lesson-four-store.js';
+import {askNationRobot,nationPrompt,findArtifact,defaultTeams} from './robot.js';
 
 // 4차시: 3차시 문장판의 유물을 우리 기준으로 나누고, 나라별 역사 로봇에게 우리 반 검증 문장을 가르칩니다.
-export const fourthSteps=['우리 기준으로 나누기','나라 로봇 가르치기','로봇에게 묻기','진짜 AI와 비교하기'];
+export const fourthSteps=['우리 기준으로 나누기','모둠 로봇 가르치기','로봇에게 묻기','진짜 AI와 비교하기'];
 const fourthTimes=[15,10,12,3];
 const groups=[1,2,3,4,5,6];
 const art=id=>artifacts.find(a=>a.id===id);
@@ -23,7 +23,7 @@ export const criterionExamples=[
 ];
 
 let session=load(),tab=0,sentences=[],sorts=[],teams=[],facts=[],roomRows=[],loaded=false,error='',notice='',timer=null;
-let draft=null,own={artifact:'',status:'사실 확인',sentence:'',original:''},robotNation='',chats={},voiceOn=true,listening=false,teacherNation='고구려',trapOpen=false;
+let draft=null,own={artifact:'',status:'사실 확인',sentence:'',original:''},robotSel=0,chats={},voiceOn=true,listening=false,teacherRobot=1,trapOpen=false;
 const blankOwn=()=>({artifact:'',status:'사실 확인',sentence:'',original:''});
 
 const joined=()=>session.code&&session.group!==null&&session.author;
@@ -59,52 +59,56 @@ function sortsView(){
 }
 
 
-// 로봇 나라: 모둠이 고른 나라 → 3차시에 처음 올린 문장들의 유물 나라 → 기본 배정 순서로 정합니다.
+// 모둠 로봇: 모둠마다 로봇이 하나씩 있고, 그 모둠이 3차시에 조사한 유물만 설명합니다.
+const nationOf=id=>art(id)?.nation||'';
+const idOfName=name=>artifacts.find(a=>a.name===name)?.id||'';
 function boardNation(group){
  const ids=sentences.filter(s=>s.group===group).slice(0,3).map(s=>idOfName(s.artifact)).filter(Boolean);if(!ids.length)return '';
  const count={};ids.forEach(id=>count[id]=(count[id]||0)+1);
  return nationOf(ids.reduce((best,id)=>count[id]>count[best]?id:best,ids[0]));
 }
-const teamOf=g=>teams.find(t=>t.group===g)?.nation||boardNation(g)||defaultTeams[g]||'고구려';
-const myNation=()=>teamOf(session.group);
-const nationOf=id=>art(id)?.nation||'';
-const idOfName=name=>artifacts.find(a=>a.name===name)?.id||'';
-const robotFacts=n=>facts.filter(f=>f.nation===n);
+const nationOfRobot=g=>boardNation(g)||defaultTeams[g]||'고구려';
+const robotName=g=>`${g}모둠 ${nationOfRobot(g)} 로봇`;
+const groupArtifacts=g=>[...new Set(sentences.filter(s=>s.group===g).map(s=>idOfName(s.artifact)).filter(Boolean))];
+const robotFacts=g=>facts.filter(f=>f.robot===g);
 const robotFace={'고구려':'🔴','백제':'🟡','신라':'🟢','가야':'🔵'};
 const statusLine=s=>s.status==='고친 문장'&&s.original?`<s>${e(s.original)}</s> → ${e(s.sentence)}`:e(s.sentence);
+const objectJosa=word=>{const code=word.charCodeAt(word.length-1)-0xac00;return word+(code>=0&&code<11172&&code%28?'을':'를');};
+const currentRobot=()=>robotSel||(teacher()?1:session.group);
 
 function factLine(f,removable=true){
  return `<li><span class="c3-status" data-status="${e(f.status)}">${statusMark[f.status]||''} ${e(f.status)}</span> ${f.artifact?`<span class="c3-tag">${e(nameOf(f.artifact))}</span> `:''}${statusLine(f)} <small>${who(f.group)}</small>${removable&&f.mine?` <button class="quiet small" type="button" data-c4="forget" data-id="${e(f.id)}">지우기</button>`:''}</li>`;
 }
 function robotsView(){
- return `<div class="c3-board-head"><h2>나라 로봇이 배운 문장</h2></div><div class="c4-nations">${nations.map(n=>{const list=robotFacts(n),team=groups.filter(g=>teamOf(g)===n);return `<section class="c3-group ${!teacher()&&n===myNation()?'is-mine':''}"><h3>${robotFace[n]} ${n} 로봇 <small>${list.length}문장</small></h3><p class="c4-team">${team.map(g=>`${g}모둠`).join(' · ')||'맡은 모둠 없음'}</p>${list.length?`<ul>${list.map(f=>factLine(f)).join('')}</ul>`:'<p class="c3-empty">아직 배운 문장이 없어요.</p>'}</section>`;}).join('')}</div>`;
+ return `<div class="c3-board-head"><h2>모둠 로봇이 배운 문장</h2></div><div class="c4-nations c4-robots">${groups.map(g=>{const list=robotFacts(g),items=groupArtifacts(g);return `<section class="c3-group ${!teacher()&&g===session.group?'is-mine':''}"><h3>${robotFace[nationOfRobot(g)]} ${robotName(g)} <small>${list.length}문장</small></h3><p class="c4-team">담당 유물: ${items.map(id=>e(nameOf(id))).join(', ')||'아직 없음'}</p>${list.length?`<ul>${list.map(f=>factLine(f)).join('')}</ul>`:'<p class="c3-empty">아직 배운 문장이 없어요.</p>'}</section>`;}).join('')}</div>`;
 }
-function ownForm(nation){
- const ids=boardIds().filter(id=>nationOf(id)===nation),fixed=own.status==='고친 문장';
- return `<form data-c4-form="own" class="c4-own"><h3 class="c4-sub">직접 문장을 가르쳐요 ${teacher()?'<small>함정 문장을 하나 넣어 보세요</small>':''}</h3>${teacher()?`<label class="field"><span>어느 로봇에게?</span><select name="nation">${nations.map(n=>`<option ${n===nation?'selected':''}>${n}</option>`).join('')}</select></label>`:''}<label class="field"><span>유물</span><select name="artifact"><option value="">${nation} 전체</option>${ids.map(id=>`<option value="${id}" ${own.artifact===id?'selected':''}>${e(nameOf(id))}</option>`).join('')}</select></label><fieldset class="c3-choices c3-status-pick"><legend>어떤 문장인가요?</legend>${['사실 확인','고친 문장','판단 보류'].map(s=>`<label><input type="radio" name="status" value="${s}" ${own.status===s?'checked':''}><span><b>${s}</b></span></label>`).join('')}</fieldset>${fixed?`<label class="field c3-original"><span>틀렸던 원래 문장</span><input name="original" maxlength="300" value="${e(own.original)}"></label>`:''}<label class="field"><span>${fixed?'바르게 고친 문장':'가르칠 문장'}</span><input name="sentence" maxlength="300" value="${e(own.sentence)}" placeholder="예: 안악 3호분 벽화에는 부엌이 그려져 있다."></label><button class="primary c3-wide" type="submit">로봇에게 가르치기</button></form>`;
+function ownForm(robot){
+ const ids=groupArtifacts(robot),fixed=own.status==='고친 문장';
+ return `<form data-c4-form="own" class="c4-own"><h3 class="c4-sub">직접 문장을 가르쳐요 ${teacher()?'<small>함정 문장을 하나 넣어 보세요</small>':''}</h3>${teacher()?`<label class="field"><span>어느 로봇에게?</span><select name="robot">${groups.map(g=>`<option value="${g}" ${g===robot?'selected':''}>${e(robotName(g))}</option>`).join('')}</select></label>`:''}<label class="field"><span>유물</span><select name="artifact"><option value="">유물을 골라 주세요</option>${ids.map(id=>`<option value="${id}" ${own.artifact===id?'selected':''}>${e(nameOf(id))}</option>`).join('')}</select></label><fieldset class="c3-choices c3-status-pick"><legend>어떤 문장인가요?</legend>${['사실 확인','고친 문장','판단 보류'].map(s=>`<label><input type="radio" name="status" value="${s}" ${own.status===s?'checked':''}><span><b>${s}</b></span></label>`).join('')}</fieldset>${fixed?`<label class="field c3-original"><span>틀렸던 원래 문장</span><input name="original" maxlength="300" value="${e(own.original)}"></label>`:''}<label class="field"><span>${fixed?'바르게 고친 문장':'가르칠 문장'}</span><input name="sentence" maxlength="300" value="${e(own.sentence)}" placeholder="예: 토우는 흙으로 만들었다."></label><button class="primary c3-wide" type="submit">로봇에게 가르치기</button></form>`;
 }
 function teachView(){
- if(teacher())return `<section class="c3-board" data-live="robots">${robotsView()}</section><details class="c4-teacher" ${trapOpen?'open':''}><summary data-c4="trap">선생님: 함정 문장 넣기 (학생에게 보이지 않게 열어 주세요)</summary>${ownForm(teacherNation)}${notice?`<p class="c3-guide c3-done" role="status">${e(notice)}</p>`:''}</details>`;
- const nation=myNation(),known=new Set(robotFacts(nation).map(f=>f.source).filter(Boolean));
- const board=sentences.filter(s=>nationOf(idOfName(s.artifact))===nation);
- return `<section class="c3-card"><div class="c4-team-pick"><span>우리 모둠이 만드는 로봇</span>${nations.map(n=>`<button type="button" class="small ${n===nation?'primary':'quiet'}" data-c4="team" data-nation="${n}" aria-pressed="${n===nation}">${robotFace[n]} ${n}</button>`).join('')}</div><p class="c3-guide"><b>${nation} 로봇</b>은 우리가 가르친 ${nation} 유물 문장만 알아요. 3차시 문장판에서 골라 가르치고, 필요하면 직접 문장을 더 가르쳐요.</p><h3 class="c4-sub">3차시 문장판의 ${nation} 문장 <small>${board.length}개</small></h3><ul class="c4-board-list">${board.map(s=>`<li><span class="c3-status" data-status="${e(s.status)}">${statusMark[s.status]||''} ${e(s.status)}</span> <span class="c3-tag">${e(s.artifact)}</span> ${statusLine(s)} ${known.has(s.id)?'<b class="c3-check">✓ 배웠어요</b>':`<button class="quiet small" type="button" data-c4="teach" data-id="${e(s.id)}">가르치기</button>`}</li>`).join('')||'<li class="c3-empty">이 나라 유물 문장이 아직 없어요.</li>'}</ul>${ownForm(nation)}${notice?`<p class="c3-guide c3-done" role="status">${e(notice)}</p>`:''}</section><section class="c3-board" data-live="robots">${robotsView()}</section>`;
+ if(teacher())return `<section class="c3-board" data-live="robots">${robotsView()}</section><details class="c4-teacher" ${trapOpen?'open':''}><summary data-c4="trap">선생님: 함정 문장 넣기 (학생에게 보이지 않게 열어 주세요)</summary>${ownForm(teacherRobot)}${notice?`<p class="c3-guide c3-done" role="status">${e(notice)}</p>`:''}</details>`;
+ const g=session.group,known=new Set(robotFacts(g).map(f=>f.source).filter(Boolean));
+ const board=sentences.filter(s=>s.group===g);
+ return `<section class="c3-card"><div class="c4-robot-head"><span class="c4-face" aria-hidden="true">🤖<i>${robotFace[nationOfRobot(g)]}</i></span><div><h2>우리 모둠 로봇 · ${e(robotName(g))}</h2><p>담당 유물: ${groupArtifacts(g).map(id=>e(nameOf(id))).join(', ')||'3차시 문장이 아직 없어요'}</p></div></div><p class="c3-guide">우리 로봇은 <b>우리 모둠이 3차시에 조사한 유물</b>만 설명해요. 같은 나라라도 다른 모둠 유물은 그 모둠 로봇이 맡아요.</p><h3 class="c4-sub">3차시에 우리 모둠이 올린 문장 <small>${board.length}개</small></h3><ul class="c4-board-list">${board.map(s=>`<li><span class="c3-status" data-status="${e(s.status)}">${statusMark[s.status]||''} ${e(s.status)}</span> <span class="c3-tag">${e(s.artifact)}</span> ${statusLine(s)} ${known.has(s.id)?'<b class="c3-check">✓ 배웠어요</b>':`<button class="quiet small" type="button" data-c4="teach" data-id="${e(s.id)}">가르치기</button>`}</li>`).join('')||'<li class="c3-empty">3차시에 올린 문장이 아직 없어요.</li>'}</ul>${ownForm(g)}${notice?`<p class="c3-guide c3-done" role="status">${e(notice)}</p>`:''}</section><section class="c3-board" data-live="robots">${robotsView()}</section>`;
 }
 
 const kinds={'맞아요':'ok','아니에요':'no','알려 줄게요':'ok','알 수 없어요':'mixed','몰라요':'unknown'};
 function robotView(){
- const nation=robotNation||(!teacher()?myNation():'고구려'),list=chats[nation]||[];
+ const g=currentRobot(),list=chats[g]||[];
  const speech=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
- return `<section class="c3-card c4-robot"><div class="c4-team-pick"><span>누구에게 물어볼까요?</span>${nations.map(n=>`<button type="button" class="small ${n===nation?'primary':'quiet'}" data-c4="robot" data-nation="${n}" aria-pressed="${n===nation}">${robotFace[n]} ${n} 로봇 · ${robotFacts(n).length}</button>`).join('')}</div><div class="c4-robot-head"><span class="c4-face" aria-hidden="true">🤖<i>${robotFace[nation]}</i></span><div><h2>${nation} 로봇</h2><p>${nation} 유물 문장 ${robotFacts(nation).length}개를 배웠어요.</p></div><button class="quiet small" type="button" data-c4="voice" aria-pressed="${voiceOn}">${voiceOn?'🔊 목소리 켜짐':'🔇 목소리 꺼짐'}</button></div><form data-c4-form="ask"><label class="field"><span>로봇에게 물어볼 말</span><input name="question" maxlength="120" autocomplete="off" placeholder="예: 안악 3호분 벽화에는 뭐가 그려져 있어?"></label><div class="c4-ask-row">${speech?`<button class="quiet c4-mic ${listening?'is-on':''}" type="button" data-c4="listen">${listening?'듣는 중… 말해 주세요':'🎤 말로 묻기'}</button>`:''}<button class="primary" type="submit">⌨️ 글로 묻기</button></div></form>${speech?'':'<p class="c3-empty">이 기기에서는 말로 묻기가 안 돼요. 글로 물어봐 주세요.</p>'}<ol class="c4-chat">${list.map(({q,r})=>`<li><p class="c4-q">${e(q)}</p><p class="c4-a" data-kind="${kinds[r.answer]||'unknown'}"><b>${e(r.answer)}</b> ${e(r.say)}</p><p class="c4-thought">로봇의 생각 · 유물: ${e(r.thought.artifact||'못 찾음')}${r.thought.match?` · 가장 비슷한 배운 문장(${r.thought.score}%): ${e(r.thought.match)}`:''}${r.thought.words.length?` · 같은 말: ${e(r.thought.words.join(', '))}`:''}</p>${r.fact?`<p class="c4-thought">근거: ${e(who(r.fact.group))}가 가르친 문장</p>`:''}</li>`).join('')}</ol><p class="c3-guide">로봇의 대답이 이상하면 <b>근거 문장</b>을 보세요. 틀린 문장을 가르쳤다면 2번에서 지우고 바른 문장을 가르쳐요. 다른 나라 유물은 그 나라 로봇에게 물어봐요.</p></section>`;
+ return `<section class="c3-card c4-robot"><div class="c4-team-pick"><span>누구에게 물어볼까요?</span>${groups.map(x=>`<button type="button" class="small ${x===g?'primary':'quiet'}" data-c4="robot" data-group="${x}" aria-pressed="${x===g}">${robotFace[nationOfRobot(x)]} ${e(robotName(x))} · ${robotFacts(x).length}</button>`).join('')}</div><div class="c4-robot-head"><span class="c4-face" aria-hidden="true">🤖<i>${robotFace[nationOfRobot(g)]}</i></span><div><h2>${e(robotName(g))}</h2><p>담당 유물: ${groupArtifacts(g).map(id=>e(nameOf(id))).join(', ')||'아직 없음'} · 배운 문장 ${robotFacts(g).length}개</p></div><button class="quiet small" type="button" data-c4="voice" aria-pressed="${voiceOn}">${voiceOn?'🔊 목소리 켜짐':'🔇 목소리 꺼짐'}</button></div><form data-c4-form="ask"><label class="field"><span>로봇에게 물어볼 말</span><input name="question" maxlength="120" autocomplete="off" placeholder="예: 토우는 무엇으로 만들었어?"></label><div class="c4-ask-row">${speech?`<button class="quiet c4-mic ${listening?'is-on':''}" type="button" data-c4="listen">${listening?'듣는 중… 말해 주세요':'🎤 말로 묻기'}</button>`:''}<button class="primary" type="submit">⌨️ 글로 묻기</button></div></form>${speech?'':'<p class="c3-empty">이 기기에서는 말로 묻기가 안 돼요. 글로 물어봐 주세요.</p>'}<ol class="c4-chat">${list.map(({q,r})=>`<li><p class="c4-q">${e(q)}</p><p class="c4-a" data-kind="${kinds[r.answer]||'unknown'}"><b>${e(r.answer)}</b> ${e(r.say)}</p><p class="c4-thought">로봇의 생각 · 유물: ${e(r.thought.artifact||'못 찾음')}${r.thought.match?` · 가장 비슷한 배운 문장(${r.thought.score}%): ${e(r.thought.match)}`:''}${r.thought.words.length?` · 같은 말: ${e(r.thought.words.join(', '))}`:''}</p>${r.fact?`<p class="c4-thought">근거: ${e(who(r.fact.group))}가 가르친 문장</p>`:''}</li>`).join('')}</ol><p class="c3-guide">로봇의 대답이 이상하면 <b>근거 문장</b>을 보세요. 틀린 문장을 가르쳤다면 2번에서 지우고 바른 문장을 가르쳐요. 다른 모둠 유물은 그 모둠 로봇에게 물어봐요.</p></section>`;
 }
 
+function promptFor(g){const label=`${g}모둠 ${nationOfRobot(g)}`;return nationPrompt(label,robotFacts(g).map(f=>({...f,nation:label})),nameOf);}
 function compareView(){
- return `<section class="c3-card"><h2>진짜 AI도 배운 것만 말할까요?</h2>${teacher()?`<ol class="c4-steps-list"><li>나라 로봇의 <b>요청문 복사</b>를 눌러요.</li><li>챗GPT 새 대화에 붙여 넣어요. 휴대폰 챗GPT의 <b>음성 대화</b>를 쓰면 진짜 로봇처럼 말로 대화할 수 있어요.</li><li>우리 로봇에게 했던 질문을 진짜 AI에게도 똑같이 해요.</li></ol><div class="c4-copy">${nations.map(n=>`<button class="quiet" type="button" data-c4="copy" data-nation="${n}">${robotFace[n]} ${n} 로봇 요청문 복사</button>`).join('')}</div><textarea class="c4-prompt" readonly rows="8" aria-label="진짜 AI 요청문">${e(nationPrompt(teacherNation,facts,nameOf))}</textarea>`:'<p>선생님이 우리 반이 가르친 문장을 진짜 AI에게 넣고, 같은 질문을 해요.</p>'}<h3 class="c4-sub">비교하며 이야기해요</h3><ul class="c4-steps-list"><li>진짜 AI는 우리가 <b>가르치지 않은 것</b>도 대답했나요?</li><li>누가 “몰라요”를 더 잘했나요?</li><li>틀린 문장(함정)을 가르쳤을 때 두 로봇은 어떻게 대답했나요?</li></ul><div class="c3-guide c3-done"><b>오늘의 정리</b><br>① 로봇은 배운 것만 안다. ② 틀리게 가르치면 틀리게 대답한다. ③ 모르면 “몰라요”라고 하는 로봇이 좋은 로봇이다.</div><p class="c3-guide">다음 시간(5차시)에는 우리 나라 로봇의 모습을 유물에서 근거를 찾아 디자인하고, AI에게 그리게 한 뒤 그림 속 실수를 찾아요.</p></section>`;
+ return `<section class="c3-card"><h2>진짜 AI도 배운 것만 말할까요?</h2>${teacher()?`<ol class="c4-steps-list"><li>모둠 로봇의 <b>요청문 복사</b>를 눌러요.</li><li>챗GPT 새 대화에 붙여 넣어요. 휴대폰 챗GPT의 <b>음성 대화</b>를 쓰면 진짜 로봇처럼 말로 대화할 수 있어요.</li><li>우리 로봇에게 했던 질문을 진짜 AI에게도 똑같이 해요.</li></ol><div class="c4-copy">${groups.map(g=>`<button class="quiet" type="button" data-c4="copy" data-group="${g}">${robotFace[nationOfRobot(g)]} ${e(robotName(g))} 요청문 복사</button>`).join('')}</div><textarea class="c4-prompt" readonly rows="8" aria-label="진짜 AI 요청문">${e(promptFor(teacherRobot))}</textarea>`:'<p>선생님이 우리 모둠이 가르친 문장을 진짜 AI에게 넣고, 같은 질문을 해요.</p>'}<h3 class="c4-sub">비교하며 이야기해요</h3><ul class="c4-steps-list"><li>진짜 AI는 우리가 <b>가르치지 않은 것</b>도 대답했나요?</li><li>누가 “몰라요”를 더 잘했나요?</li><li>틀린 문장(함정)을 가르쳤을 때 두 로봇은 어떻게 대답했나요?</li></ul><div class="c3-guide c3-done"><b>오늘의 정리</b><br>① 로봇은 배운 것만 안다. ② 틀리게 가르치면 틀리게 대답한다. ③ 모르면 “몰라요”라고 하는 로봇이 좋은 로봇이다.</div><p class="c3-guide">다음 시간(5차시)에는 우리 모둠 로봇의 모습을 유물에서 근거를 찾아 디자인해요.</p></section>`;
 }
 
 function render(root){
  if(!joined()){root.innerHTML=`<div class="c3-page">${joinView()}</div>`;return;}
  const body=[sortView,teachView,robotView,compareView][tab]();
- root.innerHTML=`<div class="c3-page c4-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':`${session.group}모둠 · ${myNation()} 로봇`}</b></p><div><button class="quiet small" type="button" data-c4="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c4="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="4차시 활동 순서">${fourthSteps.map((label,i)=>`<button type="button" data-c4="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fourthTimes[i]}분</small></button>`).join('')}</nav>${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':''}${body}</div>`;
+ root.innerHTML=`<div class="c3-page c4-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(robotName(session.group))}</b></p><div><button class="quiet small" type="button" data-c4="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c4="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="4차시 활동 순서">${fourthSteps.map((label,i)=>`<button type="button" data-c4="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fourthTimes[i]}분</small></button>`).join('')}</nav>${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':''}${body}</div>`;
 }
 function paintLive(root){
  const s=root.querySelector('[data-live=sorts]');if(s)s.innerHTML=sortsView();
@@ -131,10 +135,16 @@ function speak(text){
  const voice=speechSynthesis.getVoices().find(v=>v.lang?.startsWith('ko'));if(voice)say.voice=voice;
  speechSynthesis.speak(say);
 }
+export function askGroupRobot(question,g){
+ const nation=nationOfRobot(g),r=askNationRobot(question,nation,robotFacts(g).map(f=>({...f,nation})),nameOf);
+ const hit=findArtifact(String(question||''));
+ if(r.answer==='몰라요'&&hit){const owners=groups.filter(x=>x!==g&&(groupArtifacts(x).includes(hit.id)||robotFacts(x).some(f=>f.artifact===hit.id)));if(owners.length)r.say=`저는 ${objectJosa(nameOf(hit.id))} 배우지 않았어요. ${owners.map(o=>`${o}모둠 로봇`).join(', ')}에게 물어봐 주세요!`;}
+ return r;
+}
 function ask(root,question){
- const nation=robotNation||(!teacher()?myNation():'고구려'),q=String(question||'').trim();if(!q)return;
- const r=askNationRobot(q,nation,facts,nameOf);
- chats[nation]=[{q,r},...(chats[nation]||[])].slice(0,6);render(root);
+ const g=currentRobot(),q=String(question||'').trim();if(!q)return;
+ const r=askGroupRobot(q,g);
+ chats[g]=[{q,r},...(chats[g]||[])].slice(0,6);render(root);
  speak(r.answer==='알려 줄게요'||r.say.startsWith(r.answer)?r.say:`${r.answer}. ${r.say}`);
  root.querySelector('input[name=question]')?.focus();
 }
@@ -149,7 +159,7 @@ function listen(root){
 }
 
 export function mountLessonFour(root){
- const fresh=load();if(fresh.code!==session.code||fresh.group!==session.group){session=fresh;loaded=false;draft=null;sentences=[];sorts=[];teams=[];facts=[];chats={};robotNation='';}
+ const fresh=load();if(fresh.code!==session.code||fresh.group!==session.group){session=fresh;loaded=false;draft=null;sentences=[];sorts=[];teams=[];facts=[];chats={};robotSel=0;}
  error='';notice='';render(root);
  clearInterval(timer);
  timer=setInterval(()=>{if(!root.isConnected)return clearInterval(timer);if(document.visibilityState==='visible')refresh(root);},8000);
@@ -162,8 +172,8 @@ export function mountLessonFour(root){
  root.addEventListener('change',event=>{
   const el=event.target,form=el.form?.dataset.c4Form;
   if(form==='sort'&&el.dataset.bin){notice='';render(root);root.querySelector(`input[data-bin="${el.dataset.bin}"]`)?.focus();}
-  if(form==='own'&&['artifact','status','nation'].includes(el.name)){
-   if(el.name==='nation'){teacherNation=el.value;own.artifact='';}else own[el.name]=el.value;
+  if(form==='own'&&['artifact','status','robot'].includes(el.name)){
+   if(el.name==='robot'){teacherRobot=+el.value;own.artifact='';}else own[el.name]=el.value;
    notice='';render(root);root.querySelector(`[data-c4-form=own] [name=${el.name}]${el.type==='radio'?`[value="${el.value}"]`:''}`)?.focus();
   }
  });
@@ -175,15 +185,16 @@ export function mountLessonFour(root){
    if(!/^[0-9a-z]{4,12}$/.test(code)){error='수업코드는 숫자 4~12자리로 입력해 주세요.';return render(root);}
    if(!asTeacher&&!data.group){error='우리 모둠을 골라 주세요.';session.code=code;return render(root);}
    session={code,group:asTeacher?0:Number(data.group),author:session.author||token()};saveSession(session);
-   loaded=false;draft=null;robotNation='';own=blankOwn();error='';render(root);refresh(root,true);return;
+   loaded=false;draft=null;robotSel=0;own=blankOwn();error='';render(root);refresh(root,true);return;
   }
   if(kind==='own'){
    Object.assign(own,{sentence:String(data.sentence||''),original:String(data.original??own.original)});
-   const nation=teacher()?teacherNation:myNation();
+   const robot=teacher()?teacherRobot:session.group;
+   if(!own.artifact){error='어떤 유물에 대한 문장인지 골라 주세요.';return render(root);}
    if(!own.sentence.trim()){error='가르칠 문장을 적어 주세요.';return render(root);}
    if(own.status==='고친 문장'&&!own.original.trim()){error='틀렸던 원래 문장도 적어 주세요.';return render(root);}
-   try{await teachRobot(session.code,session.author,session.group,{nation,artifact:own.artifact,sentence:own.sentence.trim(),original:own.original.trim(),status:own.status,source:''});
-    own={...own,sentence:'',original:''};error='';notice=`${nation} 로봇이 새 문장을 배웠어요!`;await refresh(root);render(root);}
+   try{await teachRobot(session.code,session.author,session.group,{robot,nation:nationOfRobot(robot),artifact:own.artifact,sentence:own.sentence.trim(),original:own.original.trim(),status:own.status,source:''});
+    own={...own,sentence:'',original:''};error='';notice=`${robotName(robot)}이 새 문장을 배웠어요!`;await refresh(root);render(root);}
    catch(err){error=err.message;render(root);}
   }
   if(kind==='ask')ask(root,data.question);
@@ -192,7 +203,7 @@ export function mountLessonFour(root){
   const el=event.target.closest('[data-c4]');if(!el)return;
   const action=el.dataset.c4;
   if(action==='tab'){tab=+el.dataset.tab;notice='';error='';render(root);window.scrollTo(0,0);}
-  if(action==='leave'){session={code:session.code,group:null,author:session.author};saveSession(session);draft=null;chats={};robotNation='';own=blankOwn();trapOpen=false;render(root);}
+  if(action==='leave'){session={code:session.code,group:null,author:session.author};saveSession(session);draft=null;chats={};robotSel=0;own=blankOwn();trapOpen=false;render(root);}
   if(action==='trap'){event.preventDefault();trapOpen=!trapOpen;render(root);}
   if(action==='refresh')refresh(root,true);
   if(action==='bin-add'&&draft.bins.length<6){draft.bins.push({name:'',items:[]});render(root);root.querySelector(`input[data-bin="${draft.bins.length-1}"]`)?.focus();}
@@ -205,28 +216,24 @@ export function mountLessonFour(root){
    try{await saveSort(session.code,session.author,session.group,draft.criterion.trim(),bins,roomRows);draft.dirty=false;error='';notice='우리 분류를 저장했어요. TV에서 다른 모둠과 비교해 봐요.';await refresh(root);render(root);}
    catch(err){error=err.message;render(root);}
   }
-  if(action==='team'){
-   try{await setTeam(session.code,session.author,session.group,el.dataset.nation,roomRows);teams=[...teams.filter(t=>t.group!==session.group),{group:session.group,nation:el.dataset.nation}];robotNation='';own.artifact='';error='';render(root);}
-   catch(err){error=err.message;render(root);}
-  }
   if(action==='teach'){
    const s=sentences.find(x=>x.id===el.dataset.id);if(!s)return;
    el.disabled=true;
-   if(facts.some(f=>f.nation===myNation()&&f.source===s.id)){el.disabled=false;return;}
-   try{await teachRobot(session.code,session.author,session.group,{nation:myNation(),artifact:idOfName(s.artifact),sentence:s.sentence,original:s.original||'',status:s.status,source:s.id});error='';notice='';await refresh(root);const y=window.scrollY;render(root);window.scrollTo(0,y);}
+   if(robotFacts(session.group).some(f=>f.source===s.id)){el.disabled=false;return;}
+   try{await teachRobot(session.code,session.author,session.group,{robot:session.group,nation:nationOfRobot(session.group),artifact:idOfName(s.artifact),sentence:s.sentence,original:s.original||'',status:s.status,source:s.id});error='';notice='';await refresh(root);const y=window.scrollY;render(root);window.scrollTo(0,y);}
    catch(err){error=err.message;render(root);}
   }
   if(action==='forget'&&confirm('로봇이 이 문장을 잊게 할까요?')){
    try{await forget(session.code,session.author,el.dataset.id);facts=facts.filter(f=>f.id!==el.dataset.id);paintLive(root);}
    catch(err){error=err.message;render(root);}
   }
-  if(action==='robot'){robotNation=el.dataset.nation;render(root);}
+  if(action==='robot'){robotSel=+el.dataset.group;render(root);refresh(root);}
   if(action==='voice'){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();render(root);}
   if(action==='listen')listen(root);
   if(action==='copy'){
-   teacherNation=el.dataset.nation;const text=nationPrompt(teacherNation,facts,nameOf);
+   teacherRobot=+el.dataset.group;const text=promptFor(teacherRobot);
    render(root);
-   try{await navigator.clipboard.writeText(text);notice='';const b=root.querySelector(`[data-c4=copy][data-nation="${teacherNation}"]`);if(b)b.textContent='복사했어요! 챗GPT에 붙여 넣으세요';}
+   try{await navigator.clipboard.writeText(text);notice='';const b=root.querySelector(`[data-c4=copy][data-group="${teacherRobot}"]`);if(b)b.textContent='복사했어요! 챗GPT에 붙여 넣으세요';}
    catch{root.querySelector('.c4-prompt')?.select();}
   }
  });

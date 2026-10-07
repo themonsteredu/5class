@@ -55,6 +55,8 @@ export function assignedArtifact(group){
 const shortName=id=>shortNames[id]||art(id)?.name||'';
 const stepOf=count=>count<firstGoal?0:count<groupGoal?1:2;
 let shownStep=-1;
+// 모둠 지우기 함수가 저장 공간에 있으면 우리 모둠 문장은 어느 태블릿에서든 지울 수 있습니다.
+let groupDelete=true;
 
 let state=load(),rows=cached(),message='',boardError='',loaded=false,loading=false,big=false,timer=null;
 let draft={artifact:'',sentence:'',original:'',source:'',status:'사실 확인'};
@@ -123,7 +125,7 @@ function formView(){
 
 function boardView(){
  const counts=groupCounts(rows);
- return `${state.group===0?`<p class="c3-assign"><b>새 유물</b>${groups.map(g=>firstArtifact(g)?`<span>${g}모둠 ${shortName(assignedArtifact(g))} ${where(art(assignedArtifact(g)))}</span>`:'').join('')}</p>`:''}<div class="c3-board-head"><h2>우리 반 문장판 <small>${rows.length}문장</small></h2><div>${state.group?`<button class="quiet small" type="button" data-c3="big">${big?'작은 화면':'큰 화면'}</button>`:''}<button class="quiet small" type="button" data-c3="refresh">${loading?'불러오는 중':'문장판 다시 불러오기'}</button></div></div>${boardError?`<p class="c3-message" role="alert">${e(boardError)}${rows.length?' 마지막으로 불러온 문장을 보여 주고 있어요.':''}</p>`:''}${!rows.length&&!loaded?'<p class="c3-guide">문장판을 불러오는 중이에요…</p>':''}<div class="c3-groups">${groups.map((g,i)=>`<section class="c3-group ${g===state.group?'is-mine':''}"><h3>${g}모둠 <small>${counts[i]} / ${groupGoal}</small></h3>${counts[i]?`<ol>${rows.filter(r=>r.group===g).map(r=>`<li><span class="c3-tag">${e(r.artifact)}</span>${r.status==='고친 문장'&&r.original?`<p class="c3-was"><span>원래</span><s>${e(r.original)}</s></p><p class="c3-now"><span>고친 문장</span>${e(r.sentence)}</p>`:`<p>${e(r.sentence)}</p>`}<small>${r.source?e(r.source)+' · ':''}<b class="c3-status" data-status="${e(r.status)}">${e(r.status)}</b></small>${r.mine?`<button class="quiet small" type="button" data-c3="remove" data-id="${e(r.id)}">지우기</button>`:''}</li>`).join('')}</ol>`:'<p class="c3-empty">아직 올린 문장이 없어요.</p>'}</section>`).join('')}</div>`;
+ return `${state.group===0?`<p class="c3-assign"><b>새 유물</b>${groups.map(g=>firstArtifact(g)?`<span>${g}모둠 ${shortName(assignedArtifact(g))} ${where(art(assignedArtifact(g)))}</span>`:'').join('')}</p>`:''}<div class="c3-board-head"><h2>우리 반 문장판 <small>${rows.length}문장</small></h2><div>${state.group?`<button class="quiet small" type="button" data-c3="big">${big?'작은 화면':'큰 화면'}</button>`:''}<button class="quiet small" type="button" data-c3="refresh">${loading?'불러오는 중':'문장판 다시 불러오기'}</button></div></div>${boardError?`<p class="c3-message" role="alert">${e(boardError)}${rows.length?' 마지막으로 불러온 문장을 보여 주고 있어요.':''}</p>`:''}${!rows.length&&!loaded?'<p class="c3-guide">문장판을 불러오는 중이에요…</p>':''}<div class="c3-groups">${groups.map((g,i)=>`<section class="c3-group ${g===state.group?'is-mine':''}"><h3>${g}모둠 <small>${counts[i]} / ${groupGoal}</small></h3>${counts[i]?`<ol>${rows.filter(r=>r.group===g).map(r=>`<li><span class="c3-tag">${e(r.artifact)}</span>${r.status==='고친 문장'&&r.original?`<p class="c3-was"><span>원래</span><s>${e(r.original)}</s></p><p class="c3-now"><span>고친 문장</span>${e(r.sentence)}</p>`:`<p>${e(r.sentence)}</p>`}<small>${r.source?e(r.source)+' · ':''}<b class="c3-status" data-status="${e(r.status)}">${e(r.status)}</b></small>${r.mine||(groupDelete&&r.group===state.group)?`<button class="quiet small" type="button" data-c3="remove" data-id="${e(r.id)}">지우기</button>`:''}</li>`).join('')}</ol>`:'<p class="c3-empty">아직 올린 문장이 없어요.</p>'}</section>`).join('')}</div>`;
 }
 
 function render(root){
@@ -199,7 +201,12 @@ export function mountLessonThree(root,source){
   if(action==='jump'){event.preventDefault();root.querySelector('#c3-board')?.scrollIntoView({behavior:'smooth'});}
   if(action==='big'){big=!big;render(root);}
   if(action==='remove'&&confirm('이 문장을 문장판에서 지울까요?')){
-   try{await rpc('class5_remove',{p_code:state.code,p_id:el.dataset.id,p_author:state.author});rows=rows.filter(r=>r.id!==el.dataset.id);paintBoard(root);}
+   const body={p_code:state.code,p_id:el.dataset.id,p_author:state.author};
+   try{
+    if(groupDelete&&state.group>=1){try{await rpc('class5_remove_group',{...body,p_group:state.group});}catch(err){if(!/연결하지 못했어요/.test(err.message))throw err;groupDelete=false;await rpc('class5_remove',body);}}
+    else await rpc('class5_remove',body);
+    rows=rows.filter(r=>r.id!==el.dataset.id);paintBoard(root);
+   }
    catch(error){message=error.message;render(root);}
   }
  });

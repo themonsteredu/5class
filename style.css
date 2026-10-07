@@ -132,3 +132,4 @@
 .c4-copy{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 @media(max-width:600px){.c4-ask-row{grid-template-columns:1fr}}
 .c3-pick{margin:-4px 0 14px}.c3-pick select{width:100%}
+.c4-robots{grid-template-columns:repeat(3,minmax(0,1fr))}.c4-tv .c4-robots{grid-template-columns:repeat(6,minmax(0,1fr))}

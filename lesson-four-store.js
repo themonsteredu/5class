@@ -29,7 +29,7 @@ const last=(rows,match)=>{const out={};for(const r of rows)if(match(r))out[r.gro
 export function readRoom(rows){
  const sorts=last(rows,r=>r.artifact==='S').map(r=>({group:r.group,criterion:r.sentence,bins:decodeBins(r.original),id:r.id,mine:r.mine}));
  const teams=last(rows,r=>/^T\|/.test(r.artifact)).map(r=>({group:r.group,nation:r.artifact.slice(2)})).filter(t=>nationNames.includes(t.nation));
- const facts=rows.filter(r=>/^R\|/.test(r.artifact)).map(r=>{const [,nation,artifact,flag]=r.artifact.split('|');return {id:r.id,nation,group:flag==='t'?0:r.group,artifact:artifact||'',sentence:r.sentence,original:r.original||'',status:r.status,source:r.source||'',mine:r.mine};}).filter(f=>nationNames.includes(f.nation));
+ const facts=rows.filter(r=>/^R\|/.test(r.artifact)).map(r=>{const [,nation,artifact,flag]=r.artifact.split('|');return {id:r.id,nation,robot:r.group,group:flag==='t'?0:r.group,artifact:artifact||'',sentence:r.sentence,original:r.original||'',status:r.status,source:r.source||'',mine:r.mine};}).filter(f=>nationNames.includes(f.nation));
  return {sorts,teams,facts};
 }
 export async function loadRoom(code,author){const v=await rpc('class5_list',{p_code:roomOf(code),p_author:author});return {rows:Array.isArray(v.sentences)?v.sentences:[],...readRoom(Array.isArray(v.sentences)?v.sentences:[])};}
@@ -44,8 +44,8 @@ export async function setTeam(code,author,group,nation,rows){
  await add(code,author,group,`T|${nation}`,'로봇 모둠 배정','사실 확인');
  await removeOwn(code,author,rows.filter(r=>/^T\|/.test(r.artifact)&&r.group===group&&r.mine));
 }
-// 선생님(0) 문장은 1모둠 칸에 저장하고 표시로 구분합니다.
+// 문장은 배우는 로봇(모둠) 칸에 저장합니다. 선생님 문장은 t 표시로 구분합니다.
 export function teach(code,author,group,fact){
- return add(code,author,group||1,`R|${fact.nation}|${fact.artifact||''}|${group?'':'t'}`,fact.sentence,fact.status,fact.status==='고친 문장'?fact.original:'',fact.source||'');
+ return add(code,author,fact.robot||group||1,`R|${fact.nation}|${fact.artifact||''}|${group?'':'t'}`,fact.sentence,fact.status,fact.status==='고친 문장'?fact.original:'',fact.source||'');
 }
 export function forget(code,author,id){return rpc('class5_remove',{p_code:roomOf(code),p_id:id,p_author:author});}
