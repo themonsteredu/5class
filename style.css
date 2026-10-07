@@ -131,3 +131,4 @@
 .c4-ask-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.c4-ask-row button{min-height:54px;font-size:17px}.c4-mic.is-on{background:#fbeee9;border-color:#c68e86;color:#8a3a2e}
 .c4-copy{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 @media(max-width:600px){.c4-ask-row{grid-template-columns:1fr}}
+.c3-pick{margin:-4px 0 14px}.c3-pick select{width:100%}
