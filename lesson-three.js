@@ -1,5 +1,5 @@
 import {escapeHtml as e} from './model.js';
-import {artifacts,coreArtifacts} from './data.js';
+import {artifacts,coreArtifacts,outsideArtifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
 import {verificationSets} from './lesson-two-data.js';
 import {extraSets} from './lesson-three-data.js';
@@ -18,6 +18,8 @@ const bonusArtifacts=['guests','belt'];
 const shortNames={kitchen:'부엌·고기 창고 그림',dancers:'춤추는 사람들 그림','gold-crown':'황남대총 금관',buddha:'연가 7년명 금동 불상',seosan:'서산 마애여래 삼존상',glass:'신라 유리 제품'};
 const art=id=>artifacts.find(a=>a.id===id);
 const idOfName=name=>artifacts.find(a=>a.name===name)?.id||'';
+const studyArtifacts=[...coreArtifacts,...outsideArtifacts];
+const where=a=>a.page?`교과서 ${a.page}쪽`:a.source;
 const claimsFor=id=>extraSets[id]?.claims||verificationSets[id]?.claims||[];
 // 모둠의 첫 문장(2차시 유물)의 나라를 보고, 같은 나라에서 아직 조사하지 않은 유물을 새로 맡깁니다.
 // 유물 칸을 잘못 골라 올려도 문장 속 유물 이름(예: 갑옷, 토우)으로 어떤 유물인지 알아냅니다.
@@ -40,7 +42,7 @@ function assignments(){
  const owned=new Set(Object.values(owns).filter(Boolean)),taken=new Set(),out={};
  for(const g of groups){
   const own=owns[g],nation=art(own)?.nation;if(!nation)continue;
-  const pool=coreArtifacts.filter(a=>a.nation===nation&&a.id!==own&&claimsFor(a.id).length).map(a=>a.id);
+  const pool=studyArtifacts.filter(a=>a.nation===nation&&a.id!==own&&claimsFor(a.id).length).map(a=>a.id);
   const choice=pool.find(id=>!owned.has(id)&&!taken.has(id))||pool.find(id=>!taken.has(id))||pool[0];
   if(choice){out[g]=choice;taken.add(choice);}
  }
@@ -90,12 +92,12 @@ function stepsView(step,count){
  return `<ol class="c3-steps">${items.map(([t,c],i)=>`<li class="${i<step?'is-done':i===step?'is-now':''}"><span>${i<step?'✓':i+1}</span><b>${t}</b>${c?`<small>${c}</small>`:''}</li>`).join('')}</ol>`;
 }
 function researchCard(a,label){
- return `<section class="c3-research"><img src="assets/images/${e(a.image)}" alt="${e(a.name)}"><div><p class="c3-kicker">${label}</p><h2>${e(a.name)}</h2><p class="c3-meta">${e(a.nation)} · 교과서 ${a.page}쪽</p><p class="c3-fact">${e(a.fact)}</p><p class="c3-caution">이렇게 단정하지 않아요: ${e(a.caution)}</p><small>사진: ${e(a.credit)}</small></div></section>`;
+ return `<section class="c3-research"><img src="assets/images/${e(a.image)}" alt="${e(a.name)}"><div><p class="c3-kicker">${label}</p><h2>${e(a.name)}</h2><p class="c3-meta">${e(a.nation)} · ${e(where(a))}</p><p class="c3-fact">${e(a.fact)}</p><p class="c3-caution">이렇게 단정하지 않아요: ${e(a.caution)}</p><small>사진: ${e(a.credit)}</small></div></section>`;
 }
 function guideView(step){
  if(step===0)return `<p class="c3-guide">2차시 활동지 2쪽에서 <b>검증한 문장 3개</b>를 올려요. 틀렸던 문장은 ‘고친 문장’을 골라요.</p>`;
  const a=art(assignedArtifact(state.group));
- if(step===1)return `${researchCard(a,`우리 모둠이 새로 맡은 ${a.nation} 유물`)}<details class="c3-pick"><summary>새 유물이 우리 나라와 다르면 여기서 바꿔요</summary><label class="field"><span>새로 맡을 유물</span><select data-c3-pick>${['고구려','백제','신라','가야'].map(n=>`<optgroup label="${n}">${coreArtifacts.filter(x=>x.nation===n&&claimsFor(x.id).length).map(x=>`<option value="${x.id}" ${x.id===a.id?'selected':''}>${e(x.name)}</option>`).join('')}</optgroup>`).join('')}</select></label></details>${claimsView(a.id)}`;
+ if(step===1)return `${researchCard(a,`우리 모둠이 새로 맡은 ${a.nation} 유물`)}<details class="c3-pick"><summary>새 유물이 우리 나라와 다르면 여기서 바꿔요</summary><label class="field"><span>새로 맡을 유물</span><select data-c3-pick>${['고구려','백제','신라','가야'].map(n=>`<optgroup label="${n}">${studyArtifacts.filter(x=>x.nation===n&&claimsFor(x.id).length).map(x=>`<option value="${x.id}" ${x.id===a.id?'selected':''}>${e(x.name)}</option>`).join('')}</optgroup>`).join('')}</select></label></details>${claimsView(a.id)}`;
  return `<p class="c3-guide c3-done"><b>우리 모둠 ${groupGoal}문장 완성!</b> 아래 문장판에서 다른 모둠 문장을 읽고 <b>‘처음 알게 된 문장’ 하나</b>를 골라 두세요.</p><details class="c3-bonus"><summary>더 올리고 싶다면 · 보너스 유물</summary>${bonusArtifacts.map(id=>researchCard(art(id),'보너스 유물')+bonusClaims(id)).join('')}</details>`;
 }
 // 새 유물의 확인할 문장 3개: 카드와 교과서를 보고 판단한 뒤 고르면 아래 입력 칸이 채워집니다.
@@ -107,7 +109,7 @@ function claimsView(id){
 function bonusClaims(id){return `<ol class="c3-bonus-claims">${extraSets[id].claims.map(c=>`<li>${e(c.text)}</li>`).join('')}</ol>`;}
 function syncStep(){
  const step=stepOf(rows.filter(r=>r.group===state.group).length);
- if(step===1&&shownStep!==1){const a=art(assignedArtifact(state.group));Object.assign(draft,{artifact:a.name,status:'사실 확인',original:'',source:`교과서 ${a.page}쪽`});}
+ if(step===1&&shownStep!==1){const a=art(assignedArtifact(state.group));Object.assign(draft,{artifact:a.name,status:'사실 확인',original:'',source:where(a)});}
  shownStep=step;return step;
 }
 
@@ -115,13 +117,13 @@ function formView(){
  const step=syncStep();
  const mine=rows.filter(r=>r.group===state.group).length;
  const fixed=draft.status==='고친 문장';
- const options=`<option value="">유물을 골라 주세요</option>`+coreArtifacts.map(a=>`<option ${draft.artifact===a.name?'selected':''}>${e(a.name)}</option>`).join('');
+ const options=`<option value="">유물을 골라 주세요</option>`+studyArtifacts.map(a=>`<option ${draft.artifact===a.name?'selected':''}>${e(a.name)}</option>`).join('');
  return `<section class="c3-card">${stepsView(step,mine)}${guideView(step)}<div class="c3-form-head"><h2>문장 올리기</h2><p class="c3-goal"><b>${mine}</b> / ${groupGoal}문장</p></div><form data-c3-form="add"><label class="field"><span>1. 어떤 유물인가요?</span><select name="artifact">${options}</select></label><fieldset class="c3-choices c3-status-pick"><legend>2. 어떤 문장인가요?</legend>${sentenceStatuses.map(([s,help])=>`<label><input type="radio" name="status" value="${s}" ${draft.status===s?'checked':''}><span><b>${s}</b><small>${help}</small></span></label>`).join('')}</fieldset>${fixed?`<label class="field c3-original"><span>3. 틀렸던 원래 문장</span><textarea name="original" rows="2" maxlength="300" placeholder="예: 토우는 쇠를 녹여 만든 조각이다." required>${e(draft.original)}</textarea>${draft.original&&draft.original===autoOriginal?'<small class="c3-hint">2차시 활동지에서 ‘거짓’이었던 문장을 넣어 두었어요. 다르면 고쳐 쓰세요.</small>':''}</label><label class="field"><span>4. 자료에 맞게 고친 문장</span><textarea name="sentence" rows="2" maxlength="300" placeholder="예: 토우는 흙으로 사람이나 동물 모습을 만든 것이다." required>${e(draft.sentence)}</textarea></label>`:`<label class="field"><span>3. 검증한 문장</span><textarea name="sentence" rows="3" maxlength="300" placeholder="예: 집 모양 토기는 흙으로 만들었다." required>${e(draft.sentence)}</textarea></label>`}<label class="field"><span>${fixed?5:4}. 확인한 자료</span><input name="source" maxlength="100" value="${e(draft.source)}" placeholder="예: 교과서 28쪽"></label><button class="primary c3-wide" type="submit">문장판에 올리기</button></form>${message?`<p class="c3-message" role="alert">${e(message)}</p>`:''}</section>`;
 }
 
 function boardView(){
  const counts=groupCounts(rows);
- return `${state.group===0?`<p class="c3-assign"><b>새 유물</b>${groups.map(g=>firstArtifact(g)?`<span>${g}모둠 ${shortName(assignedArtifact(g))} ${art(assignedArtifact(g)).page}쪽</span>`:'').join('')}</p>`:''}<div class="c3-board-head"><h2>우리 반 문장판 <small>${rows.length}문장</small></h2><div>${state.group?`<button class="quiet small" type="button" data-c3="big">${big?'작은 화면':'큰 화면'}</button>`:''}<button class="quiet small" type="button" data-c3="refresh">${loading?'불러오는 중':'문장판 다시 불러오기'}</button></div></div>${boardError?`<p class="c3-message" role="alert">${e(boardError)}${rows.length?' 마지막으로 불러온 문장을 보여 주고 있어요.':''}</p>`:''}${!rows.length&&!loaded?'<p class="c3-guide">문장판을 불러오는 중이에요…</p>':''}<div class="c3-groups">${groups.map((g,i)=>`<section class="c3-group ${g===state.group?'is-mine':''}"><h3>${g}모둠 <small>${counts[i]} / ${groupGoal}</small></h3>${counts[i]?`<ol>${rows.filter(r=>r.group===g).map(r=>`<li><span class="c3-tag">${e(r.artifact)}</span>${r.status==='고친 문장'&&r.original?`<p class="c3-was"><span>원래</span><s>${e(r.original)}</s></p><p class="c3-now"><span>고친 문장</span>${e(r.sentence)}</p>`:`<p>${e(r.sentence)}</p>`}<small>${r.source?e(r.source)+' · ':''}<b class="c3-status" data-status="${e(r.status)}">${e(r.status)}</b></small>${r.mine?`<button class="quiet small" type="button" data-c3="remove" data-id="${e(r.id)}">지우기</button>`:''}</li>`).join('')}</ol>`:'<p class="c3-empty">아직 올린 문장이 없어요.</p>'}</section>`).join('')}</div>`;
+ return `${state.group===0?`<p class="c3-assign"><b>새 유물</b>${groups.map(g=>firstArtifact(g)?`<span>${g}모둠 ${shortName(assignedArtifact(g))} ${where(art(assignedArtifact(g)))}</span>`:'').join('')}</p>`:''}<div class="c3-board-head"><h2>우리 반 문장판 <small>${rows.length}문장</small></h2><div>${state.group?`<button class="quiet small" type="button" data-c3="big">${big?'작은 화면':'큰 화면'}</button>`:''}<button class="quiet small" type="button" data-c3="refresh">${loading?'불러오는 중':'문장판 다시 불러오기'}</button></div></div>${boardError?`<p class="c3-message" role="alert">${e(boardError)}${rows.length?' 마지막으로 불러온 문장을 보여 주고 있어요.':''}</p>`:''}${!rows.length&&!loaded?'<p class="c3-guide">문장판을 불러오는 중이에요…</p>':''}<div class="c3-groups">${groups.map((g,i)=>`<section class="c3-group ${g===state.group?'is-mine':''}"><h3>${g}모둠 <small>${counts[i]} / ${groupGoal}</small></h3>${counts[i]?`<ol>${rows.filter(r=>r.group===g).map(r=>`<li><span class="c3-tag">${e(r.artifact)}</span>${r.status==='고친 문장'&&r.original?`<p class="c3-was"><span>원래</span><s>${e(r.original)}</s></p><p class="c3-now"><span>고친 문장</span>${e(r.sentence)}</p>`:`<p>${e(r.sentence)}</p>`}<small>${r.source?e(r.source)+' · ':''}<b class="c3-status" data-status="${e(r.status)}">${e(r.status)}</b></small>${r.mine?`<button class="quiet small" type="button" data-c3="remove" data-id="${e(r.id)}">지우기</button>`:''}</li>`).join('')}</ol>`:'<p class="c3-empty">아직 올린 문장이 없어요.</p>'}</section>`).join('')}</div>`;
 }
 
 function render(root){
@@ -191,7 +193,7 @@ export function mountLessonThree(root,source){
   if(action==='claim'){
    const a=art(assignedArtifact(state.group)),c=claimsFor(a.id)[Number(el.dataset.i)];if(!c)return;
    const fixed=el.dataset.status==='고친 문장';
-   Object.assign(draft,{artifact:a.name,status:el.dataset.status,original:fixed?c.text:'',sentence:fixed?'':c.text,source:`교과서 ${a.page}쪽`});autoOriginal=fixed?c.text:'';message='';render(root);
+   Object.assign(draft,{artifact:a.name,status:el.dataset.status,original:fixed?c.text:'',sentence:fixed?'':c.text,source:where(a)});autoOriginal=fixed?c.text:'';message='';render(root);
    const target=root.querySelector(fixed?'textarea[name=sentence]':'[data-c3-form=add] button[type=submit]');target?.scrollIntoView({behavior:'smooth',block:'center'});if(fixed)target?.focus();
   }
   if(action==='jump'){event.preventDefault();root.querySelector('#c3-board')?.scrollIntoView({behavior:'smooth'});}
@@ -210,5 +212,5 @@ export function thirdWorksheet(source,school,group){
 }
 
 export function thirdAnswers(){
- return `<h2>교사용 정답·근거 · 3차시 새 유물</h2><p>학생이 판단을 고른 뒤 함께 확인합니다. 판단은 교과서와 카드의 설명을 기준으로 합니다. ‘판단하기 어려움’ 문장은 사실처럼 고쳐 쓰지 않습니다.</p>${[...groups.map(g=>[g+'모둠',assignedArtifact(g)]),...bonusArtifacts.map(id=>['보너스',id])].map(([who,id])=>{const a=art(id);return `<h3>${who} · ${e(a.name)} (교과서 ${a.page}쪽)</h3><ol class="l2-teacher-answers">${claimsFor(id).map(c=>`<li><p>${e(c.text)}</p><p><b>${e(c.result)}</b> · ${e(c.reason)}</p>${c.fix?`<p>고친 문장 예시: ${e(c.fix)}</p>`:''}</li>`).join('')}</ol>`;}).join('')}`;
+ return `<h2>교사용 정답·근거 · 3차시 새 유물</h2><p>학생이 판단을 고른 뒤 함께 확인합니다. 판단은 교과서와 카드의 설명을 기준으로 합니다. ‘판단하기 어려움’ 문장은 사실처럼 고쳐 쓰지 않습니다.</p>${[...groups.map(g=>[g+'모둠',assignedArtifact(g)]),...bonusArtifacts.map(id=>['보너스',id])].map(([who,id])=>{const a=art(id);return `<h3>${who} · ${e(a.name)} (${where(a)})</h3><ol class="l2-teacher-answers">${claimsFor(id).map(c=>`<li><p>${e(c.text)}</p><p><b>${e(c.result)}</b> · ${e(c.reason)}</p>${c.fix?`<p>고친 문장 예시: ${e(c.fix)}</p>`:''}</li>`).join('')}</ol>`;}).join('')}`;
 }
