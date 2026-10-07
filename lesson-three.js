@@ -20,9 +20,12 @@ export const art=id=>artifacts.find(a=>a.id===id);
 const idOfName=name=>artifacts.find(a=>a.name===name)?.id||'';
 const claimsFor=id=>extraSets[id]?.claims||verificationSets[id]?.claims||[];
 // 모둠의 첫 문장(2차시 유물)의 나라를 보고, 같은 나라에서 아직 조사하지 않은 유물을 새로 맡깁니다.
+// 유물 칸을 잘못 골라 올려도 문장 속 유물 이름(예: 갑옷, 토우)으로 어떤 유물인지 알아냅니다.
+const textNames=[['armor',['갑옷','투구']],['house',['집 모양','집모양']],['figurines',['토우']],['gold-crown',['금관']],['belt',['허리띠']],['spoon',['수저','숟가락','사발']],['pagoda',['석탑','미륵사']],['seosan',['마애','삼존상']],['buddha',['연가','금동 불상','여래']],['glass',['유리']],['kitchen',['안악','부엌']],['dancers',['춤추는','무용총 춤']],['guests',['손님맞이']],['susan',['수산리']]];
+function rowArtifact(r){const text=`${r.sentence} ${r.original||''}`;const hit=textNames.find(([,words])=>words.some(w=>text.includes(w)));return hit?hit[0]:idOfName(r.artifact);}
 // 첫 문장들(2차시 문장) 가운데 가장 많이 고른 유물을 그 모둠의 유물로 봅니다.
 function firstArtifact(group){
- const ids=rows.filter(x=>x.group===group).slice(0,firstGoal).map(r=>idOfName(r.artifact)).filter(Boolean);
+ const ids=rows.filter(x=>x.group===group).slice(0,firstGoal).map(rowArtifact).filter(Boolean);
  if(!ids.length)return '';
  const count={};ids.forEach(id=>count[id]=(count[id]||0)+1);
  return ids.reduce((best,id)=>count[id]>count[best]?id:best,ids[0]);
