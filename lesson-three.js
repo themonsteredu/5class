@@ -31,16 +31,21 @@ function firstArtifact(group){
 const pickKey=()=>`${STORE}-pick-${state.code}-${state.group}`;
 function picked(){try{return localStorage.getItem(pickKey())||'';}catch{return '';}}
 function pick(id){try{localStorage.setItem(pickKey(),id);}catch{}}
+// 모둠 순서대로 같은 나라 유물을 나눠 줍니다. 아무도 조사하지 않았고 다른 모둠이 받지 않은 유물을 먼저 줍니다.
+function assignments(){
+ const owns=Object.fromEntries(groups.map(g=>[g,firstArtifact(g)]));
+ const owned=new Set(Object.values(owns).filter(Boolean)),taken=new Set(),out={};
+ for(const g of groups){
+  const own=owns[g],nation=art(own)?.nation;if(!nation)continue;
+  const pool=coreArtifacts.filter(a=>a.nation===nation&&a.id!==own&&claimsFor(a.id).length).map(a=>a.id);
+  const choice=pool.find(id=>!owned.has(id)&&!taken.has(id))||pool.find(id=>!taken.has(id))||pool[0];
+  if(choice){out[g]=choice;taken.add(choice);}
+ }
+ return out;
+}
 export function assignedArtifact(group){
  if(group===state.group&&claimsFor(picked()).length)return picked();
- const own=firstArtifact(group),nation=art(own)?.nation;
- if(!nation)return newArtifacts[group];
- const owned=new Set(groups.map(firstArtifact).filter(Boolean));
- const pool=coreArtifacts.filter(a=>a.nation===nation&&a.id!==own&&claimsFor(a.id).length).map(a=>a.id);
- const choices=[...pool.filter(id=>!owned.has(id)),...pool.filter(id=>owned.has(id))];
- if(!choices.length)return newArtifacts[group];
- const peers=groups.filter(g=>g<group&&art(firstArtifact(g))?.nation===nation).length;
- return choices[peers%choices.length];
+ return assignments()[group]||newArtifacts[group];
 }
 const shortName=id=>shortNames[id]||art(id)?.name||'';
 const stepOf=count=>count<firstGoal?0:count<groupGoal?1:2;
@@ -95,7 +100,7 @@ function guideView(step){
 function claimsView(id){
  const set={claims:claimsFor(id)};if(!set.claims.length)return '';
  const done=text=>rows.some(r=>r.group===state.group&&(r.sentence===text||r.original===text));
- return `<section class="c3-claims"><h3>확인할 문장 3개</h3><p class="c3-guide">위 카드와 교과서를 읽고 문장마다 판단을 골라요. 고르면 아래 칸이 채워지고, <b>문장판에 올리기</b>를 누르면 끝이에요.</p><ol>${set.claims.map((c,i)=>`<li class="${done(c.text)?'is-done':''}"><p><span>문장 ${i+1}</span>${e(c.text)}${done(c.text)?' <b class="c3-check">✓ 올림</b>':''}</p><div>${[['사실 확인','맞아요'],['고친 문장','틀려서 고칠래요'],['판단 보류','자료로 알 수 없어요']].map(([s,label])=>`<button class="quiet small" type="button" data-c3="claim" data-i="${i}" data-status="${s}">${label}</button>`).join('')}</div></li>`).join('')}</ol></section>`;
+ return `<section class="c3-claims"><h3>확인할 문장 3개</h3><p class="c3-guide">위 카드와 교과서를 읽고 문장마다 판단을 골라요. 고르면 아래 칸이 채워지고, <b>문장판에 올리기</b>를 누르면 끝이에요.</p><ol>${set.claims.map((c,i)=>`<li class="${done(c.text)?'is-done':''}"><p><span>문장 ${i+1}</span>${e(c.text)}${done(c.text)?' <b class="c3-check">✓ 올림</b>':''}</p>${done(c.text)?'':`<div>${[['사실 확인','맞아요'],['고친 문장','틀려서 고칠래요'],['판단 보류','자료로 알 수 없어요']].map(([s,label])=>`<button class="quiet small" type="button" data-c3="claim" data-i="${i}" data-status="${s}">${label}</button>`).join('')}</div>`}</li>`).join('')}</ol></section>`;
 }
 function bonusClaims(id){return `<ol class="c3-bonus-claims">${extraSets[id].claims.map(c=>`<li>${e(c.text)}</li>`).join('')}</ol>`;}
 function syncStep(){
@@ -170,9 +175,10 @@ export function mountLessonThree(root,source){
    const fixed=draft.status==='고친 문장';
    if(fixed&&!draft.original.trim()){message='틀렸던 원래 문장을 적어 주세요.';return render(root);}
    if(!draft.artifact){message='어떤 유물인지 골라 주세요.';return render(root);}
+   if(rows.some(r=>r.group===state.group&&r.sentence.replace(/\s+/g,'')===draft.sentence.replace(/\s+/g,'')&&draft.sentence.trim())){message='이미 올린 문장이에요. 문장판에서 확인해 주세요.';return render(root);}
    if(!draft.sentence.trim()){message=fixed?'자료에 맞게 고친 문장을 적어 주세요.':'검증한 문장을 적어 주세요.';return render(root);}
    button.disabled=true;button.textContent='올리는 중…';
-   try{await rpc('class5_add',{p_code:state.code,p_group:state.group,p_artifact:draft.artifact,p_sentence:draft.sentence.trim(),p_source:draft.source.trim(),p_status:draft.status,p_author:state.author,p_original:fixed?draft.original.trim():''});draft.sentence='';draft.original='';autoOriginal='';suggestOriginal();draft.source='';message='';render(root);await refresh(root);root.querySelector('textarea[name=sentence]')?.focus();}
+   try{await rpc('class5_add',{p_code:state.code,p_group:state.group,p_artifact:draft.artifact,p_sentence:draft.sentence.trim(),p_source:draft.source.trim(),p_status:draft.status,p_author:state.author,p_original:fixed?draft.original.trim():''});draft.sentence='';draft.original='';autoOriginal='';suggestOriginal();draft.source='';message='';render(root);await refresh(root);render(root);root.querySelector('textarea[name=sentence]')?.focus();}
    catch(error){message=error.message;render(root);}
   }
  });
