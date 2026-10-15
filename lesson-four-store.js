@@ -36,6 +36,10 @@ export function readRoom(rows){
  const designs=last(rows,r=>r.artifact==='D').map(r=>({group:r.group,image:/^p[a-z0-9]{11}$/.test(r.sentence)?r.sentence:'',raw:r.original||'',id:r.id,mine:r.mine}));
  return {sorts,teams,facts,profiles,designs};
 }
+// 마지막으로 불러온 반 자료를 이 기기에 기억해 두었다가, 다음에 화면을 열 때 먼저 보여 줍니다(인터넷이 느릴 때 대비).
+const CACHE='moakit-5class-room-';
+export function readCache(code){try{const v=JSON.parse(localStorage.getItem(CACHE+code)||'null');return v&&Array.isArray(v.board)&&Array.isArray(v.rows)?v:null;}catch{return null;}}
+export function writeCache(code,board,rows){try{localStorage.setItem(CACHE+code,JSON.stringify({board,rows,at:Date.now()}));}catch{}}
 export async function loadRoom(code,author){const v=await rpc('class5_list',{p_code:roomOf(code),p_author:author});return {rows:Array.isArray(v.sentences)?v.sentences:[],...readRoom(Array.isArray(v.sentences)?v.sentences:[])};}
 const add=(code,author,group,artifact,sentence,status,original='',source='')=>rpc('class5_add',{p_code:roomOf(code),p_group:group,p_artifact:artifact,p_sentence:sentence,p_source:source,p_status:status,p_author:author,p_original:original});
 async function removeOwn(code,author,rows){for(const r of rows)try{await rpc('class5_remove',{p_code:roomOf(code),p_id:r.id,p_author:author});}catch{}}
