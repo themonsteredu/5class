@@ -1,7 +1,7 @@
 import {escapeHtml as e} from './model.js';
 import {artifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
-import {loadSession as load,saveSession,token,rpc,loadRoom,saveSort,teach as teachRobot,forget} from './lesson-four-store.js';
+import {loadSession as load,saveSession,token,rpc,loadRoom,readRoom,readCache,writeCache,saveSort,teach as teachRobot,forget} from './lesson-four-store.js';
 import {askNationRobot,findArtifact,defaultTeams} from './robot.js';
 import {tidyRequest,checkSections,askSections,promptText,expectedVerdict} from './gemini-prompt.js';
 
@@ -24,6 +24,8 @@ export const criterionExamples=[
 ];
 
 let session=load(),tab=0,sentences=[],sorts=[],teams=[],facts=[],roomRows=[],loaded=false,error='',notice='',timer=null;
+// boardOk: 3차시 문장판(유물 문장)을 받았는지. 못 받았으면 받을 때까지 8초마다 다시 부릅니다.
+let boardOk=false,roomOk=false,live=false,fromCache=false;
 let draft=null,own={artifact:'',status:'사실 확인',sentence:'',original:''},robotSel=0,chats={},voiceOn=true,listening=false,teacherRobot=1,trapOpen=false;
 const blankOwn=()=>({artifact:'',status:'사실 확인',sentence:'',original:''});
 
@@ -52,6 +54,7 @@ function sortView(){
  if(teacher())return `<section class="c3-board c4-wide" data-live="sorts">${sortsView()}</section>`;
  if(!loaded)return '';
  ensureDraft();
+ if(!boardOk&&!fromCache)return '<section class="c3-card"><p class="c3-guide">3차시 유물 문장을 불러오는 중이에요… 인터넷이 느리면 조금 걸려요. 8초마다 자동으로 다시 불러와요.</p></section>';
  const ids=boardIds(),left=ids.filter(id=>binOf(id)<0).length;
  return `<section class="c3-card"><p class="c3-guide">정답은 없어요. <b>규칙이 하나</b>이고, <b>모든 유물이 어딘가에 들어가고</b>, <b>3차시 문장으로 이유를 말할 수 있으면</b> 좋은 기준이에요.</p><form data-c4-form="sort"><label class="field"><span>1. 우리 기준</span><input name="criterion" maxlength="100" value="${e(draft.criterion)}" placeholder="예: 무엇에 썼는지로 나눴어요"></label><div class="c4-bin-names"><span>2. 묶음 이름</span>${draft.bins.map((b,i)=>`<label><input name="bin-${i}" data-bin="${i}" maxlength="20" value="${e(b.name)}" placeholder="묶음 ${i+1}">${draft.bins.length>1?`<button type="button" class="quiet small" data-c4="bin-remove" data-bin="${i}" aria-label="묶음 ${i+1} 빼기">×</button>`:''}</label>`).join('')}${draft.bins.length<6?'<button type="button" class="quiet small" data-c4="bin-add">묶음 추가 +</button>':''}</div></form><h3 class="c4-sub">3. 유물 카드를 묶음에 넣어요 <small>${left?`아직 안 넣은 유물 ${left}개`:'모두 넣었어요!'}</small></h3><div class="c4-arts">${ids.map(artifactCard).join('')}</div><button class="primary c3-wide" type="button" data-c4="sort-save">우리 분류 저장하기</button>${notice?`<p class="c3-guide c3-done" role="status">${e(notice)}</p>`:''}</section><section class="c3-board" data-live="sorts">${sortsView()}</section>`;
 }
@@ -253,10 +256,18 @@ function rerender(){
  if(typing!==null){const input=root.querySelector('input[name=question]');if(input){input.value=typing;input.focus();}}
 }
 
+function statusView(){
+ return `${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':fromCache&&!live&&!error?'<p class="c3-guide">마지막으로 불러온 자료를 먼저 보여 주고 있어요. 새 자료를 불러오는 중이에요…</p>':''}`;
+}
+// 이 기기에 기억해 둔 자료가 있으면 화면을 열자마자 먼저 보여 줍니다.
+function showCached(){
+ const c=readCache(session.code);if(!c||!joined())return;
+ sentences=c.board;roomRows=c.rows;({sorts,teams,facts}=readRoom(c.rows));loaded=true;fromCache=true;
+}
 function render(root){
  if(!joined()){root.innerHTML=`<div class="c3-page">${joinView()}</div>`;return;}
  const body=[sortView,teachView,robotView,compareView][tab]();paintedFacts=factsSignature();
- root.innerHTML=`<div class="c3-page c4-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(robotName(session.group))}</b></p><div><button class="quiet small" type="button" data-c4="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c4="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="4차시 활동 순서">${fourthSteps.map((label,i)=>`<button type="button" data-c4="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fourthTimes[i]}분</small></button>`).join('')}</nav>${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':''}${body}</div>`;
+ root.innerHTML=`<div class="c3-page c4-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(robotName(session.group))}</b></p><div><button class="quiet small" type="button" data-c4="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c4="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="4차시 활동 순서">${fourthSteps.map((label,i)=>`<button type="button" data-c4="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fourthTimes[i]}분</small></button>`).join('')}</nav><div data-live="status">${statusView()}</div>${body}</div>`;
 }
 // 바뀐 곳만 다시 그리고, 선생님이 글을 고르고(복사하려고) 있으면 건드리지 않습니다.
 function put(el,html){
@@ -274,15 +285,23 @@ function paintLive(root){
 
 async function refresh(root,full=false){
  if(!joined())return;
- try{
-  const [list,room]=await Promise.all([full||!loaded?rpc('class5_list',{p_code:session.code,p_author:session.author}):null,loadRoom(session.code,session.author)]);
-  if(list)sentences=Array.isArray(list.sentences)?list.sentences:[];
-  ({sorts,teams,facts,rows:roomRows}=room);
-  const first=!loaded;loaded=true;error='';
-  if(first&&draft&&!draft.dirty)draft=null;
-  if(first)return render(root);
- }catch(err){error=err.message;if(!loaded){loaded=true;return render(root);}}
- if(root.isConnected)paintLive(root);
+ const code=session.code,author=session.author;
+ const [list,data]=await Promise.allSettled([full||!boardOk?rpc('class5_list',{p_code:code,p_author:author}):Promise.resolve(null),loadRoom(code,author)]);
+ if(code!==session.code||author!==session.author)return;
+ const problems=[];let boardChanged=false;
+ if(list.status==='fulfilled'&&list.value){const next=Array.isArray(list.value.sentences)?list.value.sentences:[];boardChanged=!boardOk||JSON.stringify(next)!==JSON.stringify(sentences);sentences=next;boardOk=true;}
+ else if(list.status==='rejected')problems.push(list.reason?.message||'유물 문장을 불러오지 못했어요.');
+ if(data.status==='fulfilled'){({sorts,teams,facts,rows:roomRows}=data.value);roomOk=true;}
+ else problems.push(data.reason?.message||'로봇 자료를 불러오지 못했어요.');
+ if(boardOk||roomOk)writeCache(code,sentences,roomRows);
+ const firstLive=!live&&boardOk&&roomOk;if(firstLive)live=true;
+ const wasLoaded=loaded;loaded=true;
+ error=problems.length?`인터넷이 느려서 ${list.status==='rejected'?'3차시 유물 문장':'로봇 자료'}을 아직 못 불러왔어요. 8초마다 자동으로 다시 불러와요.${fromCache||boardOk?' 그동안 마지막으로 불러온 자료를 보여 줘요.':''}`:'';
+ if(firstLive&&draft&&!draft.dirty)draft=null;
+ if(!root.isConnected)return;
+ if(!wasLoaded||boardChanged||firstLive&&fromCache)return render(root);
+ put(root.querySelector('[data-live=status]'),statusView());
+ paintLive(root);
 }
 
 function speak(text){
@@ -316,7 +335,8 @@ function listen(root){
 }
 
 export function mountLessonFour(root){
- const fresh=load();if(fresh.code!==session.code||fresh.group!==session.group){session=fresh;loaded=false;draft=null;sentences=[];sorts=[];teams=[];facts=[];chats={};robotSel=0;resetAi();}
+ const fresh=load();if(fresh.code!==session.code||fresh.group!==session.group){session=fresh;loaded=false;draft=null;sentences=[];sorts=[];teams=[];facts=[];roomRows=[];chats={};robotSel=0;resetAi();boardOk=roomOk=live=fromCache=false;}
+ if(!loaded)showCached();
  liveRoot=root;error='';notice='';render(root);
  clearInterval(timer);
  timer=setInterval(()=>{if(!root.isConnected)return clearInterval(timer);if(document.visibilityState==='visible')refresh(root);},8000);
@@ -342,7 +362,7 @@ export function mountLessonFour(root){
    if(!/^[0-9a-z]{4,12}$/.test(code)){error='수업코드는 숫자 4~12자리로 입력해 주세요.';return render(root);}
    if(!asTeacher&&!data.group){error='우리 모둠을 골라 주세요.';session.code=code;return render(root);}
    session={code,group:asTeacher?0:Number(data.group),author:session.author||token()};saveSession(session);
-   loaded=false;draft=null;robotSel=0;own=blankOwn();resetAi();error='';render(root);refresh(root,true);return;
+   loaded=false;draft=null;robotSel=0;own=blankOwn();resetAi();error='';sentences=[];sorts=[];teams=[];facts=[];roomRows=[];boardOk=roomOk=live=fromCache=false;showCached();render(root);refresh(root,true);return;
   }
   if(kind==='own'){
    Object.assign(own,{sentence:String(data.sentence||''),original:String(data.original??own.original)});
