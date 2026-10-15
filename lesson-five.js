@@ -1,6 +1,6 @@
 import {escapeHtml as e} from './model.js';
 import {artifacts} from './data.js';
-import {loadSession as load,saveSession,token,rpc,loadRoom,forget} from './lesson-four-store.js';
+import {loadSession as load,saveSession,token,rpc,loadRoom,readRoom,readCache,writeCache,forget} from './lesson-four-store.js';
 import {askNationRobot,findArtifact} from './robot.js';
 import * as room from './robot-room.js';
 import {openStep} from './lesson-four.js';
@@ -15,6 +15,8 @@ const kinds={'맞아요':'ok','아니에요':'no','알려 줄게요':'ok','알 �
 const josa=(word,[withEnd,without])=>{const code=word.charCodeAt(word.length-1)-0xac00;return word+(code>=0&&code<11172&&code%28?withEnd:without);};
 
 let session=load(),tab=0,sentences=[],facts=[],profileRows=[],designRows=[],roomRows=[],loaded=false,error='',notice='',timer=null,liveRoot=null;
+// 4차시와 같은 방식: 기억해 둔 자료를 먼저 보여 주고, 3차시 문장판을 받을 때까지 8초마다 다시 부릅니다.
+let boardOk=false,roomOk=false,live=false,fromCache=false;
 let draft=null,fact=null,editor=null,showRobot=0,chats={},voiceOn=true,listening=false;
 const images=new Map();// 그림 방 이름 → {status:'loading'|'done'|'error',url}
 const blankFact=()=>({artifact:'',status:'사실 확인',sentence:'',original:'',source:''});
@@ -207,10 +209,17 @@ function openSheets(){
  if(!dialog.open)dialog.showModal();
 }
 
+function statusView(){
+ return `${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':fromCache&&!live&&!error?'<p class="c3-guide">마지막으로 불러온 자료를 먼저 보여 주고 있어요. 새 자료를 불러오는 중이에요…</p>':''}`;
+}
+function showCached(){
+ const c=readCache(session.code);if(!c||!joined())return;
+ const v=readRoom(c.rows);sentences=c.board;roomRows=c.rows;facts=v.facts;profileRows=v.profiles;designRows=v.designs;loaded=true;fromCache=true;
+}
 function render(root){
  if(!joined()){root.innerHTML=`<div class="c3-page">${joinView()}</div>`;return;}
  const body=[profileView,teachView,designView,showView][tab]();
- root.innerHTML=`<div class="c3-page c4-page c5-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(nameFor(session.group))}</b></p><div><button class="quiet small" type="button" data-c5="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c5="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="5차시 활동 순서">${fifthSteps.map((label,i)=>`<button type="button" data-c5="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fifthTimes[i]}분</small></button>`).join('')}</nav>${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':''}${body}</div>`;
+ root.innerHTML=`<div class="c3-page c4-page c5-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(nameFor(session.group))}</b></p><div><button class="quiet small" type="button" data-c5="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c5="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="5차시 활동 순서">${fifthSteps.map((label,i)=>`<button type="button" data-c5="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fifthTimes[i]}분</small></button>`).join('')}</nav><div data-live="status">${statusView()}</div>${body}</div>`;
  drawCanvas();
 }
 // 바뀐 곳만 다시 그립니다. 쓰고 있는 글이나 고른 글은 건드리지 않습니다.
@@ -227,18 +236,31 @@ function paint(){
 }
 async function refresh(root,full=false){
  if(!joined())return;
- try{
-  const [list,data]=await Promise.all([full||!loaded?rpc('class5_list',{p_code:session.code,p_author:session.author}):null,loadRoom(session.code,session.author)]);
-  if(list)sentences=Array.isArray(list.sentences)?list.sentences:[];
-  ({facts,profiles:profileRows,designs:designRows,rows:roomRows}=data);
-  const first=!loaded;loaded=true;error='';
-  if(first)return render(root);
- }catch(err){error=err.message;if(!loaded){loaded=true;return render(root);}}
+ const code=session.code,author=session.author;
+ const [list,data]=await Promise.allSettled([full||!boardOk?rpc('class5_list',{p_code:code,p_author:author}):Promise.resolve(null),loadRoom(code,author)]);
+ if(code!==session.code||author!==session.author)return;
+ const problems=[];let boardChanged=false;
+ if(list.status==='fulfilled'&&list.value){const next=Array.isArray(list.value.sentences)?list.value.sentences:[];boardChanged=!boardOk||JSON.stringify(next)!==JSON.stringify(sentences);sentences=next;boardOk=true;}
+ else if(list.status==='rejected')problems.push('3차시 유물 문장');
+ if(data.status==='fulfilled'){({facts,profiles:profileRows,designs:designRows,rows:roomRows}=data.value);roomOk=true;}
+ else problems.push('로봇 자료');
+ if(boardOk||roomOk)writeCache(code,sentences,roomRows);
+ const firstLive=!live&&boardOk&&roomOk;if(firstLive)live=true;
+ const wasLoaded=loaded;loaded=true;
+ error=problems.length?`인터넷이 느려서 ${problems[0]}을 아직 못 불러왔어요. 8초마다 자동으로 다시 불러와요.${fromCache||boardOk?' 그동안 마지막으로 불러온 자료를 보여 줘요.':''}`:'';
+ // 기억해 둔 자료로 만든 입력 칸은, 아직 손대지 않았다면 새 자료로 다시 채웁니다.
+ if(firstLive&&draft&&!draft.touched)draft=null;
+ if(firstLive&&editor&&!editor.img&&!editor.touched)editor=null;
+ if(!root.isConnected)return;
+ // 쓰고 있는 프로필·문장·그림을 지우지 않도록, 처음 불러올 때와 문장판이 바뀌었을 때만 화면 전체를 다시 그립니다.
+ if(!wasLoaded||boardChanged&&!editor?.img||firstLive&&fromCache&&!editor?.img)return render(root);
+ put(root.querySelector('[data-live=status]'),statusView());
  paint();
 }
 
 export function mountLessonFive(root){
- const fresh=load();if(fresh.code!==session.code||fresh.group!==session.group){session=fresh;loaded=false;draft=null;fact=null;editor=null;sentences=[];facts=[];profileRows=[];designRows=[];chats={};showRobot=0;}
+ const fresh=load();if(fresh.code!==session.code||fresh.group!==session.group){session=fresh;loaded=false;draft=null;fact=null;editor=null;sentences=[];facts=[];profileRows=[];designRows=[];roomRows=[];chats={};showRobot=0;boardOk=roomOk=live=fromCache=false;}
+ if(!loaded)showCached();
  liveRoot=root;error='';notice='';render(root);
  clearInterval(timer);
  timer=setInterval(()=>{if(!root.isConnected)return clearInterval(timer);if(document.visibilityState==='visible')refresh(root);},8000);
@@ -249,18 +271,19 @@ export function mountLessonFive(root){
  const stop=()=>{drag=null;};root.addEventListener('pointerup',stop);root.addEventListener('pointercancel',stop);
  root.addEventListener('input',event=>{
   const el=event.target,form=el.form?.dataset.c5Form;
+  if(form==='profile'&&draft)draft.touched=true;
   if(form==='profile'&&draft){if(el.name==='personality-custom')draft.personality=el.value;else if(['name','catchphrase','intro'].includes(el.name))draft[el.name]=el.value;notice='';refreshPreview(root);}
   if(form==='teach'&&fact&&['sentence','original','source'].includes(el.name))fact[el.name]=el.value;
   if(el.dataset.c5Zoom!==undefined){editor.zoom=+el.value;editor.dirty=true;drawCanvas();}
-  if(el.dataset.c5Sticker!==undefined&&el.tagName==='INPUT'){editor.stickers[+el.dataset.c5Sticker][el.dataset.key]=el.value;refreshPreview(root);}
+  if(el.dataset.c5Sticker!==undefined&&el.tagName==='INPUT'){editor.touched=true;editor.stickers[+el.dataset.c5Sticker][el.dataset.key]=el.value;refreshPreview(root);}
  });
  root.addEventListener('change',async event=>{
   const el=event.target,form=el.form?.dataset.c5Form;
-  if(form==='profile'&&draft&&el.name==='favorite'){draft.favorite=el.value;notice='';refreshPreview(root);}
-  if(form==='profile'&&draft&&el.name==='personality'){draft.custom=el.value==='__custom';draft.personality=draft.custom?'':el.value;notice='';keepPlace(root,()=>render(root));if(draft.custom)root.querySelector('input[name=personality-custom]')?.focus();}
+  if(form==='profile'&&draft&&el.name==='favorite'){draft.touched=true;draft.favorite=el.value;notice='';refreshPreview(root);}
+  if(form==='profile'&&draft&&el.name==='personality'){draft.touched=true;draft.custom=el.value==='__custom';draft.personality=draft.custom?'':el.value;notice='';keepPlace(root,()=>render(root));if(draft.custom)root.querySelector('input[name=personality-custom]')?.focus();}
   if(form==='teach'&&fact&&['artifact','status'].includes(el.name)){fact[el.name]=el.value;notice='';keepPlace(root,()=>render(root));}
-  if(el.dataset.c5Bg!==undefined){editor.background=el.value;keepPlace(root,()=>render(root));}
-  if(el.dataset.c5Sticker!==undefined&&el.tagName==='SELECT'){editor.stickers[+el.dataset.c5Sticker][el.dataset.key]=el.value;refreshPreview(root);}
+  if(el.dataset.c5Bg!==undefined){editor.touched=true;editor.background=el.value;keepPlace(root,()=>render(root));}
+  if(el.dataset.c5Sticker!==undefined&&el.tagName==='SELECT'){editor.touched=true;editor.stickers[+el.dataset.c5Sticker][el.dataset.key]=el.value;refreshPreview(root);}
   if(el.dataset.c5File!==undefined){const file=el.files?.[0];el.value='';try{await readPicture(file);error='';notice='';}catch(err){error=err.message;}keepPlace(root,()=>render(root));}
  });
  root.addEventListener('submit',async event=>{
@@ -271,7 +294,7 @@ export function mountLessonFive(root){
    if(!/^[0-9a-z]{4,12}$/.test(code)){error='수업코드는 숫자 4~12자리로 입력해 주세요.';return render(root);}
    if(!asTeacher&&!data.group){error='우리 모둠을 골라 주세요.';session.code=code;return render(root);}
    session={code,group:asTeacher?0:Number(data.group),author:session.author||token()};saveSession(session);
-   loaded=false;draft=null;fact=null;editor=null;chats={};showRobot=0;error='';render(root);refresh(root,true);return;
+   loaded=false;draft=null;fact=null;editor=null;chats={};showRobot=0;error='';sentences=[];facts=[];profileRows=[];designRows=[];roomRows=[];boardOk=roomOk=live=fromCache=false;showCached();render(root);refresh(root,true);return;
   }
   if(kind==='profile'){
    if(!draft.name.trim()){error='로봇 이름을 지어 주세요.';return render(root);}
@@ -296,7 +319,7 @@ export function mountLessonFive(root){
   if(action==='tab'){tab=+el.dataset.tab;notice='';error='';render(root);window.scrollTo(0,0);}
   if(action==='leave'){session={code:session.code,group:null,author:session.author};saveSession(session);draft=null;fact=null;editor=null;chats={};showRobot=0;render(root);}
   if(action==='refresh'){await refresh(root,true);render(root);}
-  if(action==='catch'&&draft){draft.catchphrase=el.dataset.value;keepPlace(root,()=>render(root));}
+  if(action==='catch'&&draft){draft.touched=true;draft.catchphrase=el.dataset.value;keepPlace(root,()=>render(root));}
   if(action==='forget'&&confirm('로봇이 이 문장을 잊게 할까요?')){
    try{await forget(session.code,session.author,el.dataset.id);facts=facts.filter(f=>f.id!==el.dataset.id);paint();}
    catch(err){error=err.message;render(root);}
