@@ -71,7 +71,10 @@ function boardNation(group){
 const nationOfRobot=g=>boardNation(g)||defaultTeams[g]||'고구려';
 const robotName=g=>`${g}모둠 ${nationOfRobot(g)} 로봇`;
 const groupArtifacts=g=>[...new Set(sentences.filter(s=>s.group===g).map(s=>idOfName(s.artifact)).filter(Boolean))];
-const robotFacts=g=>facts.filter(f=>f.robot===g);
+// 3차시 문장판에서 가르친 문장은 그 문장을 올린 모둠의 로봇 것입니다.
+// 나라별 로봇 시절(10월 7일)에는 같은 나라 모둠의 문장이 한 로봇 칸에 모여 저장되어서, 출처 문장으로 원래 모둠을 찾습니다.
+const robotOf=f=>(f.source&&sentences.find(s=>s.id===f.source)?.group)||f.robot;
+const robotFacts=g=>facts.filter(f=>robotOf(f)===g);
 const robotFace={'고구려':'🔴','백제':'🟡','신라':'🟢','가야':'🔵'};
 const statusLine=s=>s.status==='고친 문장'&&s.original?`<s>${e(s.original)}</s> → ${e(s.sentence)}`:e(s.sentence);
 const objectJosa=word=>{const code=word.charCodeAt(word.length-1)-0xac00;return word+(code>=0&&code<11172&&code%28?'을':'를');};
@@ -108,7 +111,7 @@ let aiRobot=0,aiChecks={},aiAsks={},aiBusy=false,aiGen=0,aiPin=null,liveRoot=nul
 const PIN_STORE='moakit-5class-teacher-pin';
 const savedPin=()=>{try{return localStorage.getItem(PIN_STORE)||'';}catch{return '';}};
 const keepPin=pin=>{try{pin?localStorage.setItem(PIN_STORE,pin):localStorage.removeItem(PIN_STORE);}catch{}};
-const factsSignature=()=>JSON.stringify(facts.map(f=>[f.id,f.robot,f.status,f.artifact,f.sentence,f.original]));
+const factsSignature=()=>JSON.stringify(facts.map(f=>[f.id,robotOf(f),f.status,f.artifact,f.sentence,f.original]));
 const aiRobotNow=()=>aiRobot||(teacher()?1:session.group);
 const aiRequest=(mode,g,question='')=>tidyRequest({mode,robot:robotName(g),question,facts:robotFacts(g).map(f=>({artifact:f.artifact?nameOf(f.artifact):'',status:f.status,sentence:f.sentence,original:f.original}))});
 const sameFacts=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
