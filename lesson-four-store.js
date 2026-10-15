@@ -1,4 +1,4 @@
-// 4차시 기록(모둠 분류, 로봇 모둠 배정, 로봇이 배운 문장)을 3차시 문장판 저장 함수에 함께 보관합니다.
+// 4·5차시 기록(모둠 분류, 로봇이 배운 문장, 로봇 프로필과 디자인)을 3차시 문장판 저장 함수에 함께 보관합니다.
 // 수업코드 앞에 r을 붙인 별도 방을 쓰므로 3차시 문장판에는 섞이지 않습니다.
 const API='https://awjndrxyyqyngybulyor.supabase.co/rest/v1/rpc/';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3am5kcnh5eXF5bmd5YnVseW9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTEwMTUsImV4cCI6MjA5OTg4NzAxNX0.9G8aCw9jG8eSmeUaLOSiD0Fl34GpOD44XVOqTwCMWa4';
@@ -29,8 +29,12 @@ const last=(rows,match)=>{const out={};for(const r of rows)if(match(r))out[r.gro
 export function readRoom(rows){
  const sorts=last(rows,r=>r.artifact==='S').map(r=>({group:r.group,criterion:r.sentence,bins:decodeBins(r.original),id:r.id,mine:r.mine}));
  const teams=last(rows,r=>/^T\|/.test(r.artifact)).map(r=>({group:r.group,nation:r.artifact.slice(2)})).filter(t=>nationNames.includes(t.nation));
- const facts=rows.filter(r=>/^R\|/.test(r.artifact)).map(r=>{const [,nation,artifact,flag]=r.artifact.split('|');return {id:r.id,nation,robot:r.group,group:flag==='t'?0:r.group,artifact:artifact||'',sentence:r.sentence,original:r.original||'',status:r.status,source:r.source||'',mine:r.mine};}).filter(f=>nationNames.includes(f.nation));
- return {sorts,teams,facts};
+ const facts=rows.filter(r=>/^R\|/.test(r.artifact)).map(r=>{const [,nation,artifact,flag]=r.artifact.split('|');return {id:r.id,nation,robot:r.group,group:flag==='t'?0:r.group,added:flag==='n',artifact:artifact||'',sentence:r.sentence,original:r.original||'',status:r.status,source:r.source||'',mine:r.mine};}).filter(f=>nationNames.includes(f.nation));
+ // 5차시: P = 로봇 프로필, D = 로봇 디자인(그림이 든 방 이름과 꾸미기). 모둠마다 마지막 저장을 씁니다.
+ // 꾸미기 내용(raw)은 lesson-five-store.js가 검사해서 풉니다.
+ const profiles=last(rows,r=>r.artifact==='P').map(r=>({group:r.group,name:r.sentence,raw:r.original||'',id:r.id,mine:r.mine}));
+ const designs=last(rows,r=>r.artifact==='D').map(r=>({group:r.group,image:/^p[a-z0-9]{11}$/.test(r.sentence)?r.sentence:'',raw:r.original||'',id:r.id,mine:r.mine}));
+ return {sorts,teams,facts,profiles,designs};
 }
 export async function loadRoom(code,author){const v=await rpc('class5_list',{p_code:roomOf(code),p_author:author});return {rows:Array.isArray(v.sentences)?v.sentences:[],...readRoom(Array.isArray(v.sentences)?v.sentences:[])};}
 const add=(code,author,group,artifact,sentence,status,original='',source='')=>rpc('class5_add',{p_code:roomOf(code),p_group:group,p_artifact:artifact,p_sentence:sentence,p_source:source,p_status:status,p_author:author,p_original:original});

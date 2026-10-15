@@ -2,7 +2,8 @@ import {escapeHtml as e} from './model.js';
 import {artifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
 import {loadSession as load,saveSession,token,rpc,loadRoom,saveSort,teach as teachRobot,forget} from './lesson-four-store.js';
-import {askNationRobot,findArtifact,defaultTeams} from './robot.js';
+import {askNationRobot,findArtifact} from './robot.js';
+import * as room from './robot-room.js';
 import {tidyRequest,checkSections,askSections,promptText,expectedVerdict} from './gemini-prompt.js';
 
 // 4차시: 3차시 문장판의 유물을 우리 기준으로 나누고, 나라별 역사 로봇에게 우리 반 검증 문장을 가르칩니다.
@@ -61,21 +62,13 @@ function sortsView(){
 
 
 // 모둠 로봇: 모둠마다 로봇이 하나씩 있고, 그 모둠이 3차시에 조사한 유물만 설명합니다.
-const nationOf=id=>art(id)?.nation||'';
-const idOfName=name=>artifacts.find(a=>a.name===name)?.id||'';
-function boardNation(group){
- const ids=sentences.filter(s=>s.group===group).slice(0,3).map(s=>idOfName(s.artifact)).filter(Boolean);if(!ids.length)return '';
- const count={};ids.forEach(id=>count[id]=(count[id]||0)+1);
- return nationOf(ids.reduce((best,id)=>count[id]>count[best]?id:best,ids[0]));
-}
-const nationOfRobot=g=>boardNation(g)||defaultTeams[g]||'고구려';
-const robotName=g=>`${g}모둠 ${nationOfRobot(g)} 로봇`;
-const groupArtifacts=g=>[...new Set(sentences.filter(s=>s.group===g).map(s=>idOfName(s.artifact)).filter(Boolean))];
-// 3차시 문장판에서 가르친 문장은 그 문장을 올린 모둠의 로봇 것입니다.
-// 나라별 로봇 시절(10월 7일)에는 같은 나라 모둠의 문장이 한 로봇 칸에 모여 저장되어서, 출처 문장으로 원래 모둠을 찾습니다.
-const robotOf=f=>(f.source&&sentences.find(s=>s.id===f.source)?.group)||f.robot;
-const robotFacts=g=>facts.filter(f=>robotOf(f)===g);
-const robotFace={'고구려':'🔴','백제':'🟡','신라':'🟢','가야':'🔵'};
+const idOfName=room.idOfName;
+const nationOfRobot=g=>room.nationOfRobot(sentences,g);
+const robotName=g=>room.robotName(sentences,g);
+const groupArtifacts=g=>room.groupArtifacts(sentences,g);
+const robotOf=f=>room.robotOf(sentences,f);
+const robotFacts=g=>room.robotFacts(sentences,facts,g);
+const robotFace=room.robotFace;
 const statusLine=s=>s.status==='고친 문장'&&s.original?`<s>${e(s.original)}</s> → ${e(s.sentence)}`:e(s.sentence);
 const objectJosa=word=>{const code=word.charCodeAt(word.length-1)-0xac00;return word+(code>=0&&code<11172&&code%28?'을':'를');};
 const currentRobot=()=>robotSel||(teacher()?1:session.group);
@@ -315,6 +308,8 @@ function listen(root){
  try{rec.start();}catch{listening=false;render(root);}
 }
 
+// 다른 차시(5차시 '제미나이로 확인하기' 단추)에서 4차시의 특정 화면을 열 때 씁니다.
+export function openStep(i){tab=i;}
 export function mountLessonFour(root){
  const fresh=load();if(fresh.code!==session.code||fresh.group!==session.group){session=fresh;loaded=false;draft=null;sentences=[];sorts=[];teams=[];facts=[];chats={};robotSel=0;resetAi();}
  liveRoot=root;error='';notice='';render(root);
