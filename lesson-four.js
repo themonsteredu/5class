@@ -98,56 +98,81 @@ const kinds={'맞아요':'ok','아니에요':'no','알려 줄게요':'ok','알 �
 function robotView(){
  const g=currentRobot(),list=chats[g]||[];
  const speech=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
- return `<section class="c3-card c4-robot"><div class="c4-team-pick"><span>누구에게 물어볼까요?</span>${groups.map(x=>`<button type="button" class="small ${x===g?'primary':'quiet'}" data-c4="robot" data-group="${x}" aria-pressed="${x===g}">${robotFace[nationOfRobot(x)]} ${e(robotName(x))} · ${robotFacts(x).length}</button>`).join('')}</div><div class="c4-robot-head"><span class="c4-face" aria-hidden="true">🤖<i>${robotFace[nationOfRobot(g)]}</i></span><div><h2>${e(robotName(g))}</h2><p>담당 유물: ${groupArtifacts(g).map(id=>e(nameOf(id))).join(', ')||'아직 없음'} · 배운 문장 ${robotFacts(g).length}개</p></div><button class="quiet small" type="button" data-c4="voice" aria-pressed="${voiceOn}">${voiceOn?'🔊 목소리 켜짐':'🔇 목소리 꺼짐'}</button></div><form data-c4-form="ask"><label class="field"><span>로봇에게 물어볼 말</span><input name="question" maxlength="120" autocomplete="off" placeholder="예: 토우는 무엇으로 만들었어?"></label><div class="c4-ask-row">${speech?`<button class="quiet c4-mic ${listening?'is-on':''}" type="button" data-c4="listen">${listening?'듣는 중… 말해 주세요':'🎤 말로 묻기'}</button>`:''}<button class="primary" type="submit">⌨️ 글로 묻기</button></div></form>${speech?'':'<p class="c3-empty">이 기기에서는 말로 묻기가 안 돼요. 글로 물어봐 주세요.</p>'}<ol class="c4-chat">${list.map(({q,r})=>`<li><p class="c4-q">${e(q)}</p><p class="c4-a" data-kind="${kinds[r.answer]||'unknown'}"><b>${e(r.answer)}</b> ${e(r.say)}</p><p class="c4-thought">로봇의 생각 · 유물: ${e(r.thought.artifact||'못 찾음')}${r.thought.match?` · 가장 비슷한 배운 문장(${r.thought.score}%): ${e(r.thought.match)}`:''}${r.thought.words.length?` · 같은 말: ${e(r.thought.words.join(', '))}`:''}</p>${r.fact?`<p class="c4-thought">근거: ${e(who(r.fact.group))}가 가르친 문장</p>`:''}</li>`).join('')}</ol><p class="c3-guide">로봇의 대답이 이상하면 <b>근거 문장</b>을 보세요. 틀린 문장을 가르쳤다면 2번에서 지우고 바른 문장을 가르쳐요. 다른 모둠 유물은 그 모둠 로봇에게 물어봐요.</p></section>`;
+ return `<section class="c3-card c4-robot"><div class="c4-team-pick"><span>누구에게 물어볼까요?</span>${groups.map(x=>`<button type="button" class="small ${x===g?'primary':'quiet'}" data-c4="robot" data-group="${x}" aria-pressed="${x===g}">${robotFace[nationOfRobot(x)]} ${e(robotName(x))} · ${robotFacts(x).length}</button>`).join('')}</div><div class="c4-robot-head"><span class="c4-face" aria-hidden="true">🤖<i>${robotFace[nationOfRobot(g)]}</i></span><div><h2>${e(robotName(g))}</h2><p>담당 유물: ${groupArtifacts(g).map(id=>e(nameOf(id))).join(', ')||'아직 없음'} · 배운 문장 ${robotFacts(g).length}개</p></div><button class="quiet small" type="button" data-c4="voice" aria-pressed="${voiceOn}">${voiceOn?'🔊 목소리 켜짐':'🔇 목소리 꺼짐'}</button></div><form data-c4-form="ask"><label class="field"><span>로봇에게 물어볼 말</span><input name="question" maxlength="120" autocomplete="off" placeholder="예: 토우는 무엇으로 만들었어?"></label><div class="c4-ask-row">${speech?`<button class="quiet c4-mic ${listening?'is-on':''}" type="button" data-c4="listen">${listening?'듣는 중… 말해 주세요':'🎤 말로 묻기'}</button>`:''}<button class="primary" type="submit">⌨️ 글로 묻기</button></div></form>${speech?'':'<p class="c3-empty">이 기기에서는 말로 묻기가 안 돼요. 글로 물어봐 주세요.</p>'}<ol class="c4-chat">${list.map(({q,r})=>`<li><p class="c4-q">${e(q)}</p><p class="c4-a" data-kind="${kinds[r.answer]||'unknown'}"><b>${e(r.answer)}</b> ${e(r.say)}</p><p class="c4-thought">로봇의 생각 · 유물: ${e(r.thought.artifact||'못 찾음')}${r.thought.match?` · 가장 비슷한 배운 문장(${r.thought.score}%): ${e(r.thought.match)}`:''}${r.thought.words.length?` · 같은 말: ${e(r.thought.words.join(', '))}`:''}</p>${r.fact?`<p class="c4-thought">근거: ${e(who(r.fact.group))}이 가르친 문장</p>`:''}</li>`).join('')}</ol><p class="c3-guide">로봇의 대답이 이상하면 <b>근거 문장</b>을 보세요. 틀린 문장을 가르쳤다면 2번에서 지우고 바른 문장을 가르쳐요. 다른 모둠 유물은 그 모둠 로봇에게 물어봐요.</p></section>`;
 }
 
 // 4단계: 모둠 로봇이 배운 문장을 한눈에 정리하고, 선생님이 제미나이에게 맞는지 확인하거나 두 로봇에게 같은 질문을 합니다.
 // 요청문은 gemini-prompt.js가 만들고, 서버(api/gemini.js)도 같은 파일로 같은 글을 만들어 제미나이에게 보냅니다.
-let aiRobot=0,aiChecks={},aiAsks={},aiBusy=false,aiGen=0;
+let aiRobot=0,aiChecks={},aiAsks={},aiBusy=false,aiGen=0,aiPin=null,liveRoot=null,paintedFacts='',aiSetup=null,setupLoading=false;
+// 선생님 비밀번호(Vercel의 TEACHER_PIN)는 선생님 기기에만 기억합니다. 학생 태블릿은 몰라서 제미나이를 부를 수 없습니다.
+const PIN_STORE='moakit-5class-teacher-pin';
+const savedPin=()=>{try{return localStorage.getItem(PIN_STORE)||'';}catch{return '';}};
+const keepPin=pin=>{try{pin?localStorage.setItem(PIN_STORE,pin):localStorage.removeItem(PIN_STORE);}catch{}};
+const factsSignature=()=>JSON.stringify(facts.map(f=>[f.id,f.robot,f.status,f.artifact,f.sentence,f.original]));
 const aiRobotNow=()=>aiRobot||(teacher()?1:session.group);
 const aiRequest=(mode,g,question='')=>tidyRequest({mode,robot:robotName(g),question,facts:robotFacts(g).map(f=>({artifact:f.artifact?nameOf(f.artifact):'',status:f.status,sentence:f.sentence,original:f.original}))});
 const sameFacts=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
-function resetAi(){aiRobot=0;aiChecks={};aiAsks={};aiBusy=false;aiGen++;}
+function resetAi(){aiRobot=0;aiChecks={};aiAsks={};aiBusy=false;aiPin=null;aiGen++;}
 const verdictOf=(c,i)=>c.results.find(r=>r.no===i+1);
 function verdictCounts(c){let same=0,diff=0;c.facts.forEach((f,i)=>{const r=verdictOf(c,i);if(r)r.verdict===expectedVerdict[f.status]?same++:diff++;});return {same,diff};}
 
 async function callGemini(request){
  let response;
- try{response=await fetch('/api/gemini',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.timeout(45000)});}
+ try{response=await fetch('/api/gemini',{method:'POST',headers:{'Content-Type':'application/json','x-teacher-pin':savedPin()},body:JSON.stringify(request),signal:AbortSignal.timeout(58000)});}
  catch{throw Object.assign(Error('제미나이에게 연결하지 못했어요. 인터넷을 확인하고 다시 눌러 주세요.'),{code:'network'});}
  let value={};try{value=await response.json();}catch{}
+ if(value.code==='pin')keepPin('');
  if(!response.ok||value.error)throw Object.assign(Error(value.error||(response.status===404?'이 사이트에는 아직 제미나이 연결 기능이 없어요.':'제미나이가 대답하지 못했어요. 잠시 뒤 다시 눌러 주세요.')),{code:value.code||String(response.status)});
  return value;
 }
+// 사이트에 제미나이 키와 선생님 비밀번호가 들어 있는지 먼저 확인합니다(값은 받지 않습니다).
+async function loadSetup(){
+ if(setupLoading)return;setupLoading=true;
+ try{const response=await fetch('/api/gemini',{signal:AbortSignal.timeout(10000)});aiSetup=response.ok?await response.json():{missing:true};}
+ catch{aiSetup={offline:true};}
+ setupLoading=false;rerender();
+}
+const setupReady=()=>!aiSetup||aiSetup.offline||(aiSetup.key&&aiSetup.pin);
+function setupView(){
+ if(!aiSetup||setupReady())return '';
+ const need=aiSetup.missing?'이 사이트에는 아직 제미나이 연결 기능이 없어요.':`아직 Vercel에 ${[!aiSetup.key&&'제미나이 API 키(GEMINI_API_KEY)',!aiSetup.pin&&'선생님 비밀번호(TEACHER_PIN)'].filter(Boolean).join('와 ')}가 없어요.`;
+ return `<p class="c3-message" role="status">${need}</p>${keyHelp()}`;
+}
+// 비밀번호가 없으면 먼저 묻고, 넣은 뒤에 하려던 일을 이어서 합니다.
+function withPin(action){if(!setupReady())return rerender();if(savedPin())return action();aiPin={action,error:''};rerender();}
+const stopAll=new Set(['no-key','bad-key','no-pin','pin','too-many','quota','404','network']);
 async function runCheck(root,g){
  const request=aiRequest('check',g),gen=aiGen;
  if(!request.facts.length||aiChecks[g]?.status==='loading')return;
- aiChecks[g]={status:'loading',facts:request.facts};rerender(root);
+ aiChecks[g]={status:'loading',facts:request.facts};rerender();
  let next;
  try{const value=await callGemini(request);next={status:'done',facts:request.facts,results:Array.isArray(value.results)?value.results:[],tip:value.tip||''};}
  catch(err){next={status:'error',facts:request.facts,error:err.message,code:err.code};}
  if(gen!==aiGen)return;
- aiChecks[g]=next;rerender(root);
+ aiChecks[g]=next;
+ if(next.code==='pin')aiPin={action:()=>runCheck(root,g),error:next.error};
+ rerender();
 }
 async function runAllChecks(root){
  if(aiBusy)return;
- const gen=aiGen;aiBusy=true;rerender(root);
+ const gen=aiGen;aiBusy=true;rerender();
  for(const g of groups){
   if(gen!==aiGen)return;
   if(!robotFacts(g).length)continue;
   await runCheck(root,g);
-  if(aiChecks[g]?.code==='no-key')break;
+  // 키·비밀번호·사용량 문제는 다른 로봇도 똑같으니 멈추고, 그 로봇을 골라 안내를 보여 줍니다.
+  if(aiChecks[g]?.status==='error'&&stopAll.has(aiChecks[g].code)){aiRobot=g;if(aiChecks[g].code==='pin')aiPin={action:()=>runAllChecks(root),error:aiChecks[g].error};break;}
  }
  if(gen!==aiGen)return;
- aiBusy=false;rerender(root);
+ aiBusy=false;rerender();
 }
 async function runAsk(root,g,question){
  const q=String(question||'').replace(/\s+/g,' ').trim().slice(0,120),gen=aiGen;if(!q)return;
  const item={q,ours:askGroupRobot(q,g),gemini:{status:'loading'}};
- aiAsks[g]=[item,...(aiAsks[g]||[])].slice(0,4);rerender(root);
+ aiAsks[g]=[item,...(aiAsks[g]||[])].slice(0,4);rerender();
  try{const value=await callGemini(aiRequest('ask',g,q));item.gemini={status:'done',answer:value.answer||'몰라요',say:value.say||''};}
- catch(err){item.gemini={status:'error',error:err.message,code:err.code};}
- if(gen===aiGen)rerender(root);
+ catch(err){item.gemini={status:'error',error:err.message,code:err.code};if(err.code==='pin'&&gen===aiGen)aiPin={action:()=>runAsk(root,g,q),error:err.message};}
+ if(gen===aiGen)rerender();
 }
 // 두 로봇을 시험해 볼 질문: 함정(고치기 전 문장), 판단 보류, 배운 유물, 배우지 않은 유물
 function testQuestions(g){
@@ -164,34 +189,38 @@ function testQuestions(g){
 function summaryCard(g){
  const list=robotFacts(g),pick=g===aiRobotNow(),check=aiChecks[g],count=s=>list.filter(f=>f.status===s).length;
  const arts=[...new Set(list.map(f=>f.artifact))],mark=check?.status==='done'?verdictCounts(check):null;
- return `<section class="c3-group c4-sum ${pick?'is-mine':''}"><h3><button type="button" class="c4-sum-pick" data-c4="ai-robot" data-group="${g}" aria-pressed="${pick}">${robotFace[nationOfRobot(g)]} ${e(robotName(g))}</button></h3><p class="c4-counts">배운 문장 <b>${list.length}</b> · <span data-status="사실 확인">✓ ${count('사실 확인')}</span> · <span data-status="고친 문장">✎ ${count('고친 문장')}</span> · <span data-status="판단 보류">? ${count('판단 보류')}</span></p>${arts.map(a=>`<div class="c4-sum-art"><b>${e(a?nameOf(a):'유물 표시 없음')}</b><ul>${list.filter(f=>f.artifact===a).map(f=>`<li><span class="c3-status" data-status="${e(f.status)}">${statusMark[f.status]||''}</span> ${statusLine(f)}</li>`).join('')}</ul></div>`).join('')||'<p class="c3-empty">아직 배운 문장이 없어요.</p>'}${mark?`<p class="c4-sum-ai">✨ 제미나이: 같은 생각 ${mark.same} · 생각이 달라요 ${mark.diff}</p>`:check?.status==='loading'?'<p class="c4-sum-ai">✨ 제미나이가 확인하는 중…</p>':''}</section>`;
+ return `<section class="c3-group c4-sum ${pick?'is-mine':''}"><h3><button type="button" class="c4-sum-pick" data-c4="ai-robot" data-group="${g}" aria-pressed="${pick}">${robotFace[nationOfRobot(g)]} ${e(robotName(g))}</button></h3><p class="c4-counts">배운 문장 <b>${list.length}</b> · <span data-status="사실 확인">✓ ${count('사실 확인')}</span> · <span data-status="고친 문장">✎ ${count('고친 문장')}</span> · <span data-status="판단 보류">? ${count('판단 보류')}</span></p>${arts.map(a=>`<div class="c4-sum-art"><b>${e(a?nameOf(a):'유물 표시 없음')}</b><ul>${list.filter(f=>f.artifact===a).map(f=>`<li><span class="c3-status" data-status="${e(f.status)}">${statusMark[f.status]||''}</span> ${statusLine(f)}</li>`).join('')}</ul></div>`).join('')||'<p class="c3-empty">아직 배운 문장이 없어요.</p>'}${mark?`<p class="c4-sum-ai">✨ 제미나이: 같은 생각 ${mark.same} · 생각이 달라요 ${mark.diff}</p>`:check?.status==='loading'?'<p class="c4-sum-ai">✨ 제미나이가 확인하는 중…</p>':check?.status==='error'?`<p class="c4-sum-ai c4-sum-err">⚠️ 확인하지 못했어요: ${e(check.error)}</p>`:''}</section>`;
 }
 function summaryView(){
- return `<div class="c3-board-head"><h2>모둠 로봇이 배운 내용 한눈에 보기</h2>${teacher()?`<button class="quiet small" type="button" data-c4="ai-all" ${aiBusy?'disabled':''}>${aiBusy?'✨ 제미나이가 차례로 확인하는 중…':'✨ 모든 로봇 제미나이로 확인하기'}</button>`:''}</div><div class="c4-sums">${groups.map(summaryCard).join('')}</div>`;
+ return `<div class="c3-board-head"><h2>모둠 로봇이 배운 내용 한눈에 보기</h2>${teacher()?`<button class="quiet small" type="button" data-c4="ai-all" ${aiBusy||!setupReady()?'disabled':''}>${aiBusy?'✨ 제미나이가 차례로 확인하는 중…':'✨ 모든 로봇 제미나이로 확인하기'}</button>`:''}</div><div class="c4-sums">${groups.map(summaryCard).join('')}</div>`;
 }
 function promptCard(sections){
  return `<ol class="c4-prompt-card">${sections.map(s=>`<li><b>${e(s.title)}</b>${s.lines?`<${s.numbered?'ol':'ul'}>${s.lines.map(line=>`<li>${e(line)}</li>`).join('')||'<li>(아직 없음)</li>'}</${s.numbered?'ol':'ul'}>`:`<p>${e(s.text)}</p>`}</li>`).join('')}</ol>`;
 }
-const keyHelp=()=>'<p class="c3-guide">선생님: 사이트에 <b>제미나이 API 키</b>를 넣으면 이 버튼이 바로 작동해요. 그 전에는 <b>요청문 복사</b> → <b>제미나이 앱 열기</b>를 눌러 붙여 넣고 물어보세요.</p>';
+const keyHelp=()=>'<p class="c3-guide">선생님: Vercel 프로젝트 <b>Settings → Environment Variables</b>에 <b>GEMINI_API_KEY</b>와 <b>TEACHER_PIN</b>을 넣고, <b>Deployments</b>에서 <b>Redeploy</b>를 눌러 주세요(1분쯤). 그 뒤에 이 버튼이 작동해요. 그 전에는 <b>요청문 복사</b> → <b>제미나이 앱 열기</b>로 물어보세요.</p>';
+const setupCodes=new Set(['no-key','bad-key','no-pin','404']);
+const pinView=()=>aiPin?`<form data-c4-form="ai-pin" class="c4-ai-pin"><label class="field"><span>선생님 비밀번호 <small>Vercel에 넣은 TEACHER_PIN · 이 기기에만 기억해요</small></span><input name="pin" type="password" autocomplete="off" maxlength="40" required></label><button class="primary" type="submit">확인</button><button class="quiet" type="button" data-c4="ai-pin-cancel">닫기</button>${aiPin.error?`<p class="c3-message" role="alert">${e(aiPin.error)}</p>`:''}</form>`:'';
 function checkView(g){
  const c=aiChecks[g];if(!c)return '';
  if(c.status==='loading')return '<p class="c3-guide c4-ai-wait" role="status">✨ 제미나이가 문장을 하나씩 확인하고 있어요… (10~20초)</p>';
- if(c.status==='error')return `<p class="c3-message" role="alert">${e(c.error)}</p>${c.code==='no-key'||c.code==='404'?keyHelp():''}`;
+ if(c.status==='error')return c.code==='pin'?'':`<p class="c3-message" role="alert">${e(c.error)}</p>${setupCodes.has(c.code)?keyHelp():''}`;
  const stale=!sameFacts(c.facts,aiRequest('check',g).facts);
  return `<h3 class="c4-sub">제미나이의 대답 <small>우리 반 표시와 제미나이 판정을 견주어 봐요</small></h3><ol class="c4-verdicts">${c.facts.map((f,i)=>{const r=verdictOf(c,i),same=r&&r.verdict===expectedVerdict[f.status];return `<li data-same="${r?same:'none'}"><p class="c4-v-sentence">${f.artifact?`<span class="c3-tag">${e(f.artifact)}</span> `:''}${f.original?`<s>${e(f.original)}</s> → `:''}${e(f.sentence)}</p><div class="c4-v-pair"><p><small>우리 반 표시</small><b class="c3-status" data-status="${e(f.status)}">${statusMark[f.status]||''} ${e(f.status)}</b></p><p><small>제미나이 판정</small><b class="c4-verdict" data-verdict="${r?e(r.verdict):''}">${r?e(r.verdict):'대답 없음'}</b></p>${r?`<p class="c4-v-same">${same?'👍 같은 생각':'🔍 생각이 달라요'}</p>`:''}</div>${r?`<p class="c4-v-reason">${e(r.reason)}${r.fix?`<br><b>제미나이가 고친 문장</b> ${e(r.fix)}`:''}</p>`:''}</li>`;}).join('')}</ol>${c.tip?`<p class="c3-guide"><b>✨ 제미나이의 추천</b> ${e(c.tip)}</p>`:''}${stale?'<p class="c3-message">확인한 뒤에 로봇이 문장을 새로 배웠거나 잊었어요. 다시 확인해 보세요.</p>':''}<p class="c3-guide">제미나이도 틀릴 수 있어요. <b>생각이 다른 문장</b>은 교과서 쪽수나 2차시 자료를 펴서 선생님과 함께 확인해요.</p>`;
 }
-const geminiAnswer=x=>x.status==='loading'?'<p class="c4-a" data-kind="unknown">✨ 생각하는 중…</p>':x.status==='error'?`<p class="c3-message">${e(x.error)}</p>`:`<p class="c4-a" data-kind="${kinds[x.answer]||'unknown'}"><b>${e(x.answer)}</b> ${e(x.say)}</p>`;
+const geminiAnswer=x=>x.status==='loading'?'<p class="c4-a" data-kind="unknown">✨ 생각하는 중…</p>':x.status==='error'?`<p class="c3-message">${e(x.error)}</p>${setupCodes.has(x.code)?keyHelp():''}`:`<p class="c4-a" data-kind="${kinds[x.answer]||'unknown'}"><b>${e(x.answer)}</b> ${e(x.say)}</p>`;
 function askView(g){
  const list=aiAsks[g]||[],waiting=list.some(x=>x.gemini.status==='loading');
- return `<h3 class="c4-sub">B. 같은 질문, 두 로봇의 대답 <small>우리 로봇은 규칙으로, 제미나이는 배운 문장만 쓰라는 부탁을 받고 대답해요</small></h3><div class="c4-examples">${testQuestions(g).map(q=>`<button type="button" class="quiet small" data-c4="ai-try" data-q="${e(q)}" ${waiting?'disabled':''}>${e(q)}</button>`).join('')}</div><form data-c4-form="ai-ask" class="c4-ai-ask"><label class="field"><span>두 로봇에게 똑같이 물어볼 말</span><input name="question" maxlength="120" autocomplete="off" placeholder="예: 금관은 무엇으로 만들었어?"></label><button class="primary" type="submit" ${waiting?'disabled':''}>두 로봇에게 묻기</button></form><ol class="c4-chat c4-duel">${list.map(item=>`<li><p class="c4-q">${e(item.q)}</p><div class="c4-duel-row"><div><small>🤖 우리 로봇 (규칙)</small><p class="c4-a" data-kind="${kinds[item.ours.answer]||'unknown'}"><b>${e(item.ours.answer)}</b> ${e(item.ours.say)}</p></div><div><small>✨ 제미나이 로봇</small>${geminiAnswer(item.gemini)}</div></div></li>`).join('')}</ol><details class="c4-teacher"><summary>제미나이 로봇에게 보내는 요청문 보기</summary>${promptCard(askSections(aiRequest('ask',g,list[0]?.q||'')))}</details>`;
+ return `<h3 class="c4-sub">B. 같은 질문, 두 로봇의 대답 <small>우리 로봇은 규칙으로, 제미나이는 배운 문장만 쓰라는 부탁을 받고 대답해요</small></h3><div class="c4-examples">${testQuestions(g).map(q=>`<button type="button" class="quiet small" data-c4="ai-try" data-q="${e(q)}" ${waiting||!setupReady()?'disabled':''}>${e(q)}</button>`).join('')}</div><form data-c4-form="ai-ask" class="c4-ai-ask"><label class="field"><span>두 로봇에게 똑같이 물어볼 말</span><input name="question" maxlength="120" autocomplete="off" placeholder="예: 금관은 무엇으로 만들었어?"></label><button class="primary" type="submit" ${waiting||!setupReady()?'disabled':''}>두 로봇에게 묻기</button></form><ol class="c4-chat c4-duel">${list.map(item=>`<li><p class="c4-q">${e(item.q)}</p><div class="c4-duel-row"><div><small>🤖 우리 로봇 (규칙)</small><p class="c4-a" data-kind="${kinds[item.ours.answer]||'unknown'}"><b>${e(item.ours.answer)}</b> ${e(item.ours.say)}</p></div><div><small>✨ 제미나이 로봇</small>${geminiAnswer(item.gemini)}</div></div></li>`).join('')}</ol><details class="c4-teacher"><summary>제미나이 로봇에게 보내는 요청문 보기</summary>${promptCard(askSections(aiRequest('ask',g,list[0]?.q||'')))}</details>`;
 }
 function compareView(){
- const g=aiRobotNow(),request=aiRequest('check',g),loading=aiChecks[g]?.status==='loading';
- return `<section class="c3-board" data-live="summary">${summaryView()}</section><section class="c3-card c4-ai"><div class="c4-team-pick"><span>어느 로봇을 확인할까요?</span>${groups.map(x=>`<button type="button" class="small ${x===g?'primary':'quiet'}" data-c4="ai-robot" data-group="${x}" aria-pressed="${x===g}">${robotFace[nationOfRobot(x)]} ${e(robotName(x))} · ${robotFacts(x).length}</button>`).join('')}</div><h2>✨ 제미나이와 확인하기 · ${e(robotName(g))}</h2><h3 class="c4-sub">A. 가르친 문장, 정말 맞을까? <small>제미나이에게 이렇게 물어봐요</small></h3><p class="c4-prompt-tip">좋은 요청문은 <b>① 역할</b> → <b>② 할 일</b> → <b>③ 답하는 방법</b> → <b>④ 자료</b> 순서로 써요.</p><div data-live="ai-prompt">${promptCard(checkSections(request))}</div>${teacher()?`<div class="c4-ai-actions"><button class="primary" type="button" data-c4="ai-check" ${!request.facts.length||loading?'disabled':''}>${loading?'✨ 확인하는 중…':'✨ 제미나이에게 확인 받기'}</button><button class="quiet" type="button" data-c4="ai-copy">요청문 복사</button><a class="button quiet" href="https://gemini.google.com/app" target="_blank" rel="noopener">제미나이 앱 열기 ↗</a></div>${request.facts.length?'':'<p class="c3-empty">이 로봇은 아직 배운 문장이 없어요. 2번 화면에서 먼저 가르쳐 주세요.</p>'}${checkView(g)}${askView(g)}`:'<p class="c3-guide">선생님이 TV에서 이 요청문을 제미나이에게 보내요. 제미나이의 판정이 우리 반 표시와 같은지 함께 봐요.</p>'}</section><section class="c3-card"><h3 class="c4-sub">비교하며 이야기해요</h3><ul class="c4-steps-list"><li>제미나이와 우리 반의 생각이 <b>다른 문장</b>은 무엇인가요? 누구 말이 맞는지 교과서로 확인해요.</li><li>제미나이 로봇은 우리가 <b>가르치지 않은 것</b>도 대답했나요? 누가 “몰라요”를 더 잘했나요?</li><li>선생님이 몰래 넣은 함정 문장을 제미나이는 찾아냈나요?</li></ul><div class="c3-guide c3-done"><b>오늘의 정리</b><br>① 로봇은 배운 것만 안다. ② 틀리게 가르치면 틀리게 대답한다. ③ 진짜 AI도 틀릴 수 있으니 근거로 확인한다.</div><p class="c3-guide">다음 시간(5차시)에는 우리 모둠 로봇의 모습을 유물에서 근거를 찾아 디자인해요.</p></section>`;
+ const g=aiRobotNow(),request=aiRequest('check',g),loading=aiChecks[g]?.status==='loading',ready=setupReady();
+ if(teacher()&&!aiSetup)loadSetup();
+ return `<section class="c3-board" data-live="summary">${summaryView()}</section><section class="c3-card c4-ai"><div class="c4-team-pick"><span>어느 로봇을 확인할까요?</span>${groups.map(x=>`<button type="button" class="small ${x===g?'primary':'quiet'}" data-c4="ai-robot" data-group="${x}" aria-pressed="${x===g}">${robotFace[nationOfRobot(x)]} ${e(robotName(x))} · ${robotFacts(x).length}</button>`).join('')}</div><h2>✨ 제미나이와 확인하기 · ${e(robotName(g))}</h2><h3 class="c4-sub">A. 가르친 문장, 정말 맞을까? <small>제미나이에게 이렇게 물어봐요</small></h3><p class="c4-prompt-tip">좋은 요청문은 <b>① 역할</b> → <b>② 할 일</b> → <b>③ 답하는 방법</b> → <b>④ 자료</b> 순서로 써요.</p><div data-live="ai-prompt">${promptCard(checkSections(request))}</div>${teacher()?`<div class="c4-ai-actions"><button class="primary" type="button" data-c4="ai-check" ${!request.facts.length||loading||!ready?'disabled':''}>${loading?'✨ 확인하는 중…':'✨ 제미나이에게 확인 받기'}</button><button class="quiet" type="button" data-c4="ai-copy">요청문 복사</button><a class="button quiet" href="https://gemini.google.com/app" target="_blank" rel="noopener">제미나이 앱 열기 ↗</a></div>${setupView()}${pinView()}${request.facts.length?'':'<p class="c3-empty">이 로봇은 아직 배운 문장이 없어요. 2번 화면에서 먼저 가르쳐 주세요.</p>'}<p class="c4-ai-note">제미나이에게는 로봇 이름과 가르친 문장만 보내요. 학생 이름은 문장에 쓰지 않아요.</p>${checkView(g)}${askView(g)}`:'<p class="c3-guide">선생님이 TV에서 이 요청문을 제미나이에게 보내요. 제미나이의 판정이 우리 반 표시와 같은지 함께 봐요.</p>'}</section><section class="c3-card"><h3 class="c4-sub">비교하며 이야기해요</h3><ul class="c4-steps-list"><li>제미나이와 우리 반의 생각이 <b>다른 문장</b>은 무엇인가요? 누구 말이 맞는지 교과서로 확인해요.</li><li>제미나이 로봇은 우리가 <b>가르치지 않은 것</b>도 대답했나요? 누가 “몰라요”를 더 잘했나요?</li><li>선생님이 몰래 넣은 함정 문장을 제미나이는 찾아냈나요?</li></ul><div class="c3-guide c3-done"><b>오늘의 정리</b><br>① 로봇은 배운 것만 안다. ② 틀리게 가르치면 틀리게 대답한다. ③ 진짜 AI도 틀릴 수 있으니 근거로 확인한다.</div><p class="c3-guide">다음 시간(5차시)에는 우리 모둠 로봇의 모습을 유물에서 근거를 찾아 디자인해요.</p></section>`;
 }
 // 결과가 도착해 화면을 다시 그릴 때 보던 자리와 쓰던 질문을 지킵니다.
-function rerender(root){
- if(!root.isConnected)return;
+function rerender(){
+ const root=liveRoot;
+ if(!root?.isConnected||tab!==3)return;
  const active=document.activeElement,typing=active?.name==='question'&&root.contains(active)?active.value:null,y=window.scrollY;
  render(root);window.scrollTo(0,y);
  if(typing!==null){const input=root.querySelector('input[name=question]');if(input){input.value=typing;input.focus();}}
@@ -199,14 +228,21 @@ function rerender(root){
 
 function render(root){
  if(!joined()){root.innerHTML=`<div class="c3-page">${joinView()}</div>`;return;}
- const body=[sortView,teachView,robotView,compareView][tab]();
+ const body=[sortView,teachView,robotView,compareView][tab]();paintedFacts=factsSignature();
  root.innerHTML=`<div class="c3-page c4-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(robotName(session.group))}</b></p><div><button class="quiet small" type="button" data-c4="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c4="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="4차시 활동 순서">${fourthSteps.map((label,i)=>`<button type="button" data-c4="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fourthTimes[i]}분</small></button>`).join('')}</nav>${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':''}${body}</div>`;
 }
+// 바뀐 곳만 다시 그리고, 선생님이 글을 고르고(복사하려고) 있으면 건드리지 않습니다.
+function put(el,html){
+ if(!el||el.dataset.v===html)return;
+ const sel=window.getSelection?.();if(sel&&!sel.isCollapsed&&el.contains(sel.anchorNode))return;
+ el.innerHTML=html;el.dataset.v=html;
+}
 function paintLive(root){
- const s=root.querySelector('[data-live=sorts]');if(s)s.innerHTML=sortsView();
- const r=root.querySelector('[data-live=robots]');if(r)r.innerHTML=robotsView();
- const m=root.querySelector('[data-live=summary]');if(m)m.innerHTML=summaryView();
- const p=root.querySelector('[data-live=ai-prompt]');if(p)p.innerHTML=promptCard(checkSections(aiRequest('check',aiRobotNow())));
+ if(tab===3&&factsSignature()!==paintedFacts)return rerender();
+ put(root.querySelector('[data-live=sorts]'),sortsView());
+ put(root.querySelector('[data-live=robots]'),robotsView());
+ put(root.querySelector('[data-live=summary]'),summaryView());
+ put(root.querySelector('[data-live=ai-prompt]'),promptCard(checkSections(aiRequest('check',aiRobotNow()))));
 }
 
 async function refresh(root,full=false){
@@ -254,7 +290,7 @@ function listen(root){
 
 export function mountLessonFour(root){
  const fresh=load();if(fresh.code!==session.code||fresh.group!==session.group){session=fresh;loaded=false;draft=null;sentences=[];sorts=[];teams=[];facts=[];chats={};robotSel=0;resetAi();}
- error='';notice='';render(root);
+ liveRoot=root;error='';notice='';render(root);
  clearInterval(timer);
  timer=setInterval(()=>{if(!root.isConnected)return clearInterval(timer);if(document.visibilityState==='visible')refresh(root);},8000);
  refresh(root,true);
@@ -292,7 +328,8 @@ export function mountLessonFour(root){
    catch(err){error=err.message;render(root);}
   }
   if(kind==='ask')ask(root,data.question);
-  if(kind==='ai-ask'&&teacher()){form.reset();runAsk(root,aiRobotNow(),data.question);}
+  if(kind==='ai-ask'&&teacher()){form.reset();const g=aiRobotNow(),q=data.question;withPin(()=>runAsk(root,g,q));}
+  if(kind==='ai-pin'&&aiPin){const pin=String(data.pin||'').trim();if(!pin)return;keepPin(pin);const next=aiPin.action;aiPin=null;rerender();next();}
  });
  root.addEventListener('click',async event=>{
   const el=event.target.closest('[data-c4]');if(!el)return;
@@ -300,7 +337,7 @@ export function mountLessonFour(root){
   if(action==='tab'){tab=+el.dataset.tab;notice='';error='';render(root);window.scrollTo(0,0);}
   if(action==='leave'){session={code:session.code,group:null,author:session.author};saveSession(session);draft=null;chats={};robotSel=0;own=blankOwn();trapOpen=false;resetAi();render(root);}
   if(action==='trap'){event.preventDefault();trapOpen=!trapOpen;render(root);}
-  if(action==='refresh')refresh(root,true);
+  if(action==='refresh'){await refresh(root,true);if(tab===3){if(teacher())aiSetup=null;rerender();}}
   if(action==='bin-add'&&draft.bins.length<6){draft.bins.push({name:'',items:[]});render(root);root.querySelector(`input[data-bin="${draft.bins.length-1}"]`)?.focus();}
   if(action==='bin-remove'&&draft.bins.length>1){draft.bins.splice(+el.dataset.bin,1);draft.dirty=true;render(root);}
   if(action==='place'){const id=el.dataset.id,i=+el.dataset.bin;const already=draft.bins[i].items.includes(id);draft.bins.forEach(b=>b.items=b.items.filter(x=>x!==id));if(!already)draft.bins[i].items.push(id);draft.dirty=true;notice='';const y=window.scrollY;render(root);window.scrollTo(0,y);}
@@ -325,14 +362,17 @@ export function mountLessonFour(root){
   if(action==='robot'){robotSel=+el.dataset.group;render(root);refresh(root);}
   if(action==='voice'){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();render(root);}
   if(action==='listen')listen(root);
-  if(action==='ai-robot'){aiRobot=+el.dataset.group;rerender(root);}
-  if(action==='ai-check'&&teacher())runCheck(root,aiRobotNow());
-  if(action==='ai-all'&&teacher())runAllChecks(root);
-  if(action==='ai-try'&&teacher())runAsk(root,aiRobotNow(),el.dataset.q);
+  if(action==='ai-robot'){aiRobot=+el.dataset.group;rerender();}
+  if(action==='ai-check'&&teacher()){const g=aiRobotNow();withPin(()=>runCheck(root,g));}
+  if(action==='ai-all'&&teacher())withPin(()=>runAllChecks(root));
+  if(action==='ai-try'&&teacher()){const g=aiRobotNow(),q=el.dataset.q;withPin(()=>runAsk(root,g,q));}
+  if(action==='ai-pin-cancel'){aiPin=null;rerender();}
   if(action==='ai-copy'){
    const text=promptText(checkSections(aiRequest('check',aiRobotNow())));
-   try{await navigator.clipboard.writeText(text);el.textContent='복사했어요! 제미나이에 붙여 넣으세요';}
-   catch{el.textContent='복사하지 못했어요. 위 글을 길게 눌러 복사해 주세요';}
+   let copied=false;
+   try{await navigator.clipboard.writeText(text);copied=true;}
+   catch{const box=document.createElement('textarea');box.value=text;box.setAttribute('readonly','');box.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.append(box);box.select();try{copied=document.execCommand('copy');}catch{}box.remove();}
+   el.textContent=copied?'복사했어요! 제미나이에 붙여 넣으세요':'복사하지 못했어요. 위 글을 길게 눌러 복사해 주세요';
   }
  });
 }
