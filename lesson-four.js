@@ -191,14 +191,14 @@ function summaryCard(g){
  return `<section class="c3-group c4-sum ${pick?'is-mine':''}"><h3><button type="button" class="c4-sum-pick" data-c4="ai-robot" data-group="${g}" aria-pressed="${pick}">${robotFace[nationOfRobot(g)]} ${e(robotName(g))}</button></h3><p class="c4-counts">배운 문장 <b>${list.length}</b> · <span data-status="사실 확인">✓ ${count('사실 확인')}</span> · <span data-status="고친 문장">✎ ${count('고친 문장')}</span> · <span data-status="판단 보류">? ${count('판단 보류')}</span></p>${arts.map(a=>`<div class="c4-sum-art"><b>${e(a?nameOf(a):'유물 표시 없음')}</b><ul>${list.filter(f=>f.artifact===a).map(f=>`<li><span class="c3-status" data-status="${e(f.status)}">${statusMark[f.status]||''}</span> ${statusLine(f)}</li>`).join('')}</ul></div>`).join('')||'<p class="c3-empty">아직 배운 문장이 없어요.</p>'}${mark?`<p class="c4-sum-ai">✨ 제미나이: 같은 생각 ${mark.same} · 생각이 달라요 ${mark.diff}</p>`:check?.status==='loading'?'<p class="c4-sum-ai">✨ 제미나이가 확인하는 중…</p>':check?.status==='error'?`<p class="c4-sum-ai c4-sum-err">⚠️ 확인하지 못했어요: ${e(check.error)}</p>`:''}</section>`;
 }
 function summaryView(){
- return `<div class="c3-board-head"><h2>모둠 로봇이 배운 내용 한눈에 보기</h2>${teacher()?`<div class="c4-sum-tools"><button class="quiet small" type="button" data-c4="handout">🖨 모둠별 활동지 인쇄</button><button class="quiet small" type="button" data-c4="ai-all" ${aiBusy||!setupReady()?'disabled':''}>${aiBusy?'✨ 제미나이가 차례로 확인하는 중…':'✨ 모든 로봇 제미나이로 확인하기'}</button></div>`:''}</div><div class="c4-sums">${groups.map(summaryCard).join('')}</div>`;
+ return `<div class="c3-board-head"><h2>모둠 로봇이 배운 내용 한눈에 보기</h2><div class="c4-sum-tools">${teacher()?'<button class="quiet small" type="button" data-c4="handout">🖨 모둠별 활동지 인쇄</button>':''}`+`<button class="quiet small" type="button" data-c4="ai-all" ${aiBusy||!setupReady()?'disabled':''}>${aiBusy?'✨ 제미나이가 차례로 확인하는 중…':'✨ 모든 로봇 제미나이로 확인하기'}</button></div></div><div class="c4-sums">${groups.map(summaryCard).join('')}</div>`;
 }
 function promptCard(sections){
  return `<ol class="c4-prompt-card">${sections.map(s=>`<li><b>${e(s.title)}</b>${s.lines?`<${s.numbered?'ol':'ul'}>${s.lines.map(line=>`<li>${e(line)}</li>`).join('')||'<li>(아직 없음)</li>'}</${s.numbered?'ol':'ul'}>`:`<p>${e(s.text)}</p>`}</li>`).join('')}</ol>`;
 }
 const keyHelp=()=>'<p class="c3-guide">선생님: Vercel 프로젝트 <b>Settings → Environment Variables</b>에 <b>GEMINI_API_KEY</b>와 <b>TEACHER_PIN</b>을 넣고, <b>Deployments</b>에서 <b>Redeploy</b>를 눌러 주세요(1분쯤). 그 뒤에 이 버튼이 작동해요. 그 전에는 <b>요청문 복사</b> → <b>제미나이 앱 열기</b>로 물어보세요.</p>';
 const setupCodes=new Set(['no-key','bad-key','no-pin','404']);
-const pinView=()=>aiPin?`<form data-c4-form="ai-pin" class="c4-ai-pin"><label class="field"><span>선생님 비밀번호 <small>Vercel에 넣은 TEACHER_PIN · 이 기기에만 기억해요</small></span><input name="pin" type="password" autocomplete="off" maxlength="40" required></label><button class="primary" type="submit">확인</button><button class="quiet" type="button" data-c4="ai-pin-cancel">닫기</button>${aiPin.error?`<p class="c3-message" role="alert">${e(aiPin.error)}</p>`:''}</form>`:'';
+const pinView=()=>aiPin?`<form data-c4-form="ai-pin" class="c4-ai-pin"><label class="field"><span>선생님 비밀번호 <small>${teacher()?'Vercel에 넣은 TEACHER_PIN · 이 기기에만 기억해요':'선생님이 이 태블릿에 한 번만 넣어 주세요 · 이 태블릿에 기억해요'}</small></span><input name="pin" type="password" autocomplete="off" maxlength="40" required></label><button class="primary" type="submit">확인</button><button class="quiet" type="button" data-c4="ai-pin-cancel">닫기</button>${aiPin.error?`<p class="c3-message" role="alert">${e(aiPin.error)}</p>`:''}</form>`:'';
 function checkView(g){
  const c=aiChecks[g];if(!c)return '';
  if(c.status==='loading')return '<p class="c3-guide c4-ai-wait" role="status">✨ 제미나이가 문장을 하나씩 확인하고 있어요… (10~20초)</p>';
@@ -237,8 +237,8 @@ function openHandouts(only=0){
 
 function compareView(){
  const g=aiRobotNow(),request=aiRequest('check',g),loading=aiChecks[g]?.status==='loading',ready=setupReady();
- if(teacher()&&!aiSetup)loadSetup();
- return `<section class="c3-board" data-live="summary">${summaryView()}</section><section class="c3-card c4-ai"><div class="c4-team-pick"><span>어느 로봇을 확인할까요?</span>${groups.map(x=>`<button type="button" class="small ${x===g?'primary':'quiet'}" data-c4="ai-robot" data-group="${x}" aria-pressed="${x===g}">${robotFace[nationOfRobot(x)]} ${e(robotName(x))} · ${robotFacts(x).length}</button>`).join('')}</div><h2>✨ 제미나이와 확인하기 · ${e(robotName(g))}</h2><h3 class="c4-sub">A. 가르친 문장, 정말 맞을까? <small>제미나이에게 이렇게 물어봐요</small></h3><p class="c4-prompt-tip">좋은 요청문은 <b>① 역할</b> → <b>② 할 일</b> → <b>③ 답하는 방법</b> → <b>④ 자료</b> 순서로 써요.</p><div data-live="ai-prompt">${promptCard(checkSections(request))}</div>${teacher()?`<div class="c4-ai-actions"><button class="primary" type="button" data-c4="ai-check" ${!request.facts.length||loading||!ready?'disabled':''}>${loading?'✨ 확인하는 중…':'✨ 제미나이에게 확인 받기'}</button><button class="quiet" type="button" data-c4="ai-copy">요청문 복사</button><button class="quiet" type="button" data-c4="handout" data-group="${g}">🖨 이 로봇 활동지</button><a class="button quiet" href="https://gemini.google.com/app" target="_blank" rel="noopener">제미나이 앱 열기 ↗</a></div>${setupView()}${pinView()}${request.facts.length?'':'<p class="c3-empty">이 로봇은 아직 배운 문장이 없어요. 2번 화면에서 먼저 가르쳐 주세요.</p>'}<p class="c4-ai-note">제미나이에게는 로봇 이름과 가르친 문장만 보내요. 학생 이름은 문장에 쓰지 않아요.</p>${checkView(g)}${askView(g)}`:'<p class="c3-guide">선생님이 TV에서 이 요청문을 제미나이에게 보내요. 제미나이의 판정이 우리 반 표시와 같은지 함께 봐요.</p>'}</section><section class="c3-card"><h3 class="c4-sub">비교하며 이야기해요</h3><ul class="c4-steps-list"><li>제미나이와 우리 반의 생각이 <b>다른 문장</b>은 무엇인가요? 누구 말이 맞는지 교과서로 확인해요.</li><li>제미나이 로봇은 우리가 <b>가르치지 않은 것</b>도 대답했나요? 누가 “몰라요”를 더 잘했나요?</li><li>선생님이 몰래 넣은 함정 문장을 제미나이는 찾아냈나요?</li></ul><div class="c3-guide c3-done"><b>오늘의 정리</b><br>① 로봇은 배운 것만 안다. ② 틀리게 가르치면 틀리게 대답한다. ③ 진짜 AI도 틀릴 수 있으니 근거로 확인한다.</div><p class="c3-guide">다음 시간(5차시)에는 우리 모둠 로봇의 모습을 유물에서 근거를 찾아 디자인해요.</p></section>`;
+ if(!aiSetup)loadSetup();
+ return `<section class="c3-board" data-live="summary">${summaryView()}</section><section class="c3-card c4-ai"><div class="c4-team-pick"><span>어느 로봇을 확인할까요?</span>${groups.map(x=>`<button type="button" class="small ${x===g?'primary':'quiet'}" data-c4="ai-robot" data-group="${x}" aria-pressed="${x===g}">${robotFace[nationOfRobot(x)]} ${e(robotName(x))} · ${robotFacts(x).length}</button>`).join('')}</div><h2>✨ 제미나이와 확인하기 · ${e(robotName(g))}</h2><h3 class="c4-sub">A. 가르친 문장, 정말 맞을까? <small>제미나이에게 이렇게 물어봐요</small></h3><p class="c4-prompt-tip">좋은 요청문은 <b>① 역할</b> → <b>② 할 일</b> → <b>③ 답하는 방법</b> → <b>④ 자료</b> 순서로 써요.</p><div data-live="ai-prompt">${promptCard(checkSections(request))}</div>${`<div class="c4-ai-actions"><button class="primary" type="button" data-c4="ai-check" ${!request.facts.length||loading||!ready?'disabled':''}>${loading?'✨ 확인하는 중…':'✨ 제미나이에게 확인 받기'}</button><button class="quiet" type="button" data-c4="ai-copy">요청문 복사</button>${teacher()?`<button class="quiet" type="button" data-c4="handout" data-group="${g}">🖨 이 로봇 활동지</button>`:''}<a class="button quiet" href="https://gemini.google.com/app" target="_blank" rel="noopener">제미나이 앱 열기 ↗</a></div>${setupView()}${pinView()}${request.facts.length?'':'<p class="c3-empty">이 로봇은 아직 배운 문장이 없어요. 2번 화면에서 먼저 가르쳐 주세요.</p>'}<p class="c4-ai-note">제미나이에게는 로봇 이름과 가르친 문장만 보내요. 학생 이름은 문장에 쓰지 않아요.</p>${checkView(g)}${askView(g)}`}</section><section class="c3-card"><h3 class="c4-sub">비교하며 이야기해요</h3><ul class="c4-steps-list"><li>제미나이와 우리 반의 생각이 <b>다른 문장</b>은 무엇인가요? 누구 말이 맞는지 교과서로 확인해요.</li><li>제미나이 로봇은 우리가 <b>가르치지 않은 것</b>도 대답했나요? 누가 “몰라요”를 더 잘했나요?</li><li>선생님이 몰래 넣은 함정 문장을 제미나이는 찾아냈나요?</li></ul><div class="c3-guide c3-done"><b>오늘의 정리</b><br>① 로봇은 배운 것만 안다. ② 틀리게 가르치면 틀리게 대답한다. ③ 진짜 AI도 틀릴 수 있으니 근거로 확인한다.</div><p class="c3-guide">다음 시간(5차시)에는 우리 모둠 로봇의 모습을 유물에서 근거를 찾아 디자인해요.</p></section>`;
 }
 // 결과가 도착해 화면을 다시 그릴 때 보던 자리와 쓰던 질문을 지킵니다.
 function rerender(){
@@ -370,7 +370,7 @@ export function mountLessonFour(root){
    catch(err){error=err.message;render(root);}
   }
   if(kind==='ask')ask(root,data.question);
-  if(kind==='ai-ask'&&teacher()){form.reset();const g=aiRobotNow(),q=data.question;withPin(()=>runAsk(root,g,q));}
+  if(kind==='ai-ask'){form.reset();const g=aiRobotNow(),q=data.question;withPin(()=>runAsk(root,g,q));}
   if(kind==='ai-pin'&&aiPin){const pin=String(data.pin||'').trim();if(!pin)return;keepPin(pin);const next=aiPin.action;aiPin=null;rerender();next();}
  });
  root.addEventListener('click',async event=>{
@@ -379,7 +379,7 @@ export function mountLessonFour(root){
   if(action==='tab'){tab=+el.dataset.tab;notice='';error='';render(root);window.scrollTo(0,0);}
   if(action==='leave'){session={code:session.code,group:null,author:session.author};saveSession(session);draft=null;chats={};robotSel=0;own=blankOwn();trapOpen=false;resetAi();render(root);}
   if(action==='trap'){event.preventDefault();trapOpen=!trapOpen;render(root);}
-  if(action==='refresh'){await refresh(root,true);if(tab===3){if(teacher())aiSetup=null;rerender();}}
+  if(action==='refresh'){await refresh(root,true);if(tab===3){aiSetup=null;rerender();}}
   if(action==='bin-add'&&draft.bins.length<6){draft.bins.push({name:'',items:[]});render(root);root.querySelector(`input[data-bin="${draft.bins.length-1}"]`)?.focus();}
   if(action==='bin-remove'&&draft.bins.length>1){draft.bins.splice(+el.dataset.bin,1);draft.dirty=true;render(root);}
   if(action==='place'){const id=el.dataset.id,i=+el.dataset.bin;const already=draft.bins[i].items.includes(id);draft.bins.forEach(b=>b.items=b.items.filter(x=>x!==id));if(!already)draft.bins[i].items.push(id);draft.dirty=true;notice='';const y=window.scrollY;render(root);window.scrollTo(0,y);}
@@ -405,9 +405,9 @@ export function mountLessonFour(root){
   if(action==='voice'){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();render(root);}
   if(action==='listen')listen(root);
   if(action==='ai-robot'){aiRobot=+el.dataset.group;rerender();}
-  if(action==='ai-check'&&teacher()){const g=aiRobotNow();withPin(()=>runCheck(root,g));}
-  if(action==='ai-all'&&teacher())withPin(()=>runAllChecks(root));
-  if(action==='ai-try'&&teacher()){const g=aiRobotNow(),q=el.dataset.q;withPin(()=>runAsk(root,g,q));}
+  if(action==='ai-check'){const g=aiRobotNow();withPin(()=>runCheck(root,g));}
+  if(action==='ai-all')withPin(()=>runAllChecks(root));
+  if(action==='ai-try'){const g=aiRobotNow(),q=el.dataset.q;withPin(()=>runAsk(root,g,q));}
   if(action==='ai-pin-cancel'){aiPin=null;rerender();}
   if(action==='handout')openHandouts(+el.dataset.group||0);
   if(action==='ai-copy'){
