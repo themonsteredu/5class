@@ -16,8 +16,8 @@ const josa=(word,[withEnd,without])=>{const code=word.charCodeAt(word.length-1)-
 
 let session=load(),tab=0,sentences=[],facts=[],profileRows=[],designRows=[],roomRows=[],loaded=false,error='',notice='',timer=null,liveRoot=null;
 // 4차시와 같은 방식: 기억해 둔 자료를 먼저 보여 주고, 3차시 문장판을 받을 때까지 8초마다 다시 부릅니다.
-let boardOk=false,roomOk=false,live=false,fromCache=false;
-let draft=null,fact=null,editor=null,showRobot=0,chats={},voiceOn=true,listening=false;
+let boardOk=false,roomOk=false,live=false,fromCache=false,loadError='';
+let draft=null,fact=null,editor=null,showRobot=0,chats={},voiceOn=true,listening=false,busy=false,saveRun=0;
 const images=new Map();// 그림 방 이름 → {status:'loading'|'done'|'error',url}
 const blankFact=()=>({artifact:'',status:'사실 확인',sentence:'',original:'',source:''});
 
@@ -33,12 +33,17 @@ const nameFor=g=>profileOf(g)?.name||robotLabel(g);
 // 로봇이 설명할 수 있는 유물: 3차시에 모둠이 올린 유물. 없으면 로봇 나라의 유물.
 const choosable=g=>{const own=groupArtifacts(g);return own.length?own:artifacts.filter(a=>a.nation===nationOfRobot(g)).map(a=>a.id);};
 const rowsLeft=g=>40-roomRows.filter(r=>r.group===g).length;
+// 프로필과 로봇 카드는 새로 쓴 뒤 예전 것을 지우므로, 더 가르치기는 두 줄을 남겨 둡니다.
+const teachLeft=g=>rowsLeft(g)-2;
+const FULL='우리 모둠 저장 칸이 가득 찼어요. 2번 화면에서 5차시 문장 하나를 ‘지우기’로 지우면 저장할 수 있어요.';
+const ownRow=(g,kind)=>roomRows.some(r=>r.group===g&&r.artifact===kind&&r.mine);
+const latestId=(list,g)=>list.find(x=>x.group===g)?.id||'';
 
 function imageUrl(id){
  if(!id)return '';
  const known=images.get(id);if(known)return known.status==='done'?known.url:'';
  images.set(id,{status:'loading',url:''});
- loadImage(session.author,id).then(url=>{images.set(id,url?{status:'done',url}:{status:'error',url:''});paint();}).catch(()=>{images.delete(id);});
+ loadImage(session.author,id).then(url=>{images.set(id,url?{status:'done',url}:{status:'error',url:''});paint();const r=liveRoot;if(r?.isConnected&&!teacher()&&(tab===0||tab===2&&!editor?.img))refreshPreview(r);}).catch(()=>{images.delete(id);paint();});
  return '';
 }
 
@@ -54,18 +59,26 @@ function joinView(){
  return `<section class="c3-card c3-join"><p class="c3-kicker">5차시 · 모둠 로봇 완성하기</p><h1>수업코드를 넣고 입장해요</h1><p class="c3-lead">3·4차시와 같은 수업코드를 넣어요.</p><form data-c5-form="join"><label class="field"><span>수업코드</span><input name="code" inputmode="numeric" autocomplete="off" maxlength="12" value="${e(session.code)}" placeholder="3차시와 같은 숫자" required></label><fieldset class="c3-choices c3-group-pick"><legend>우리 모둠</legend>${groups.map(g=>`<label><input type="radio" name="group" value="${g}" ${session.group===g?'checked':''}><span>${g}모둠</span></label>`).join('')}</fieldset><button class="primary c3-wide" type="submit">입장하기</button><button class="quiet c3-wide" type="submit" name="teacher" value="1">선생님 화면</button></form>${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}</section>`;
 }
 
+// 같은 모둠의 다른 태블릿이 새로 저장했는데 이 태블릿에서 이미 고치고 있으면, 덮어쓰기 전에 알려 줍니다.
+function formNote(){
+ if(teacher()||!session.group)return '';
+ const g=session.group;
+ if(tab===0&&draft&&draft.base!==latestId(profileRows,g))return '<p class="c3-guide c5-note">같은 모둠의 다른 태블릿이 프로필을 새로 저장했어요. <button class="quiet small" type="button" data-c5="reload-form">새로 저장된 것 불러오기</button></p>';
+ if(tab===2&&editor&&!editor.saving&&editor.base!==latestId(designRows,g))return '<p class="c3-guide c5-note">같은 모둠의 다른 태블릿이 로봇 카드를 새로 저장했어요. <button class="quiet small" type="button" data-c5="reload-form">새로 저장된 것 불러오기</button></p>';
+ return '';
+}
 // 1. 로봇 프로필
 function ensureDraft(){
  if(draft||teacher())return;
  const p=profileOf(session.group);
- draft={name:p?.name||'',personality:p?.personality||'',catchphrase:p?.catchphrase||'',intro:p?.intro||'',favorite:p?.favorite||'',custom:!!p?.personality&&!personalities.includes(p.personality)};
+ draft={name:p?.name||'',personality:p?.personality||'',catchphrase:p?.catchphrase||'',intro:p?.intro||'',favorite:p?.favorite||'',custom:!!p?.personality&&!personalities.includes(p.personality),base:latestId(profileRows,session.group)};
 }
 function profileView(){
  if(teacher())return `<section class="c3-board"><div class="c3-board-head"><h2>모둠 로봇 프로필</h2><button class="quiet small" type="button" data-c5="sheets">🖨 로봇 설계도 인쇄</button></div><div data-live="cards">${cardsView()}</div></section>`;
  if(!loaded)return '';
  ensureDraft();
  const g=session.group,custom=draft.custom;
- return `<section class="c3-card c5-split"><form data-c5-form="profile"><p class="c3-guide">우리 로봇은 <b>${e(robotLabel(g))}</b>이에요. 이름과 성격, 말버릇을 정해 주세요. 발표회에서 로봇이 이 말투로 대답해요.</p>
+ return `<div data-live="formnote">${formNote()}</div><section class="c3-card c5-split"><form data-c5-form="profile"><p class="c3-guide">우리 로봇은 <b>${e(robotLabel(g))}</b>이에요. 이름과 성격, 말버릇을 정해 주세요. 발표회에서 로봇이 이 말투로 대답해요.</p>
  <label class="field"><span>1. 로봇 이름 <small>${limits.name}자까지</small></span><input name="name" maxlength="${limits.name}" value="${e(draft.name)}" placeholder="예: 금관이"></label>
  <fieldset class="c3-choices c5-chips"><legend>2. 성격</legend>${personalities.map(p=>`<label><input type="radio" name="personality" value="${p}" ${draft.personality===p?'checked':''}><span>${p}</span></label>`).join('')}<label><input type="radio" name="personality" value="__custom" ${custom?'checked':''}><span>직접 쓰기</span></label></fieldset>${custom?`<label class="field"><span>우리가 정한 성격</span><input name="personality-custom" maxlength="${limits.personality}" value="${e(draft.personality)}"></label>`:''}
  <label class="field"><span>3. 말버릇 <small>대답 끝에 붙어요</small></span><input name="catchphrase" maxlength="${limits.catchphrase}" value="${e(draft.catchphrase)}" placeholder="예: 삐빅!"></label><div class="c4-examples">${catchphrases.map(c=>`<button type="button" class="quiet small" data-c5="catch" data-value="${e(c)}">${e(c)}</button>`).join('')}</div>
@@ -89,14 +102,14 @@ function teachView(){
  if(teacher())return `<section class="c3-board"><div class="c3-board-head"><h2>5차시에 더 가르친 문장</h2><button class="quiet small" type="button" data-c5="gemini">✨ 제미나이로 확인하기 (4차시 화면)</button></div><div data-live="added" class="c5-added">${addedView()}</div></section>`;
  if(!loaded)return '';
  fact??=blankFact();
- const g=session.group,list=robotFacts(g),fixed=fact.status==='고친 문장',left=rowsLeft(g);
+ const g=session.group,list=robotFacts(g),fixed=fact.status==='고친 문장',left=teachLeft(g);
  return `<section class="c3-card"><p class="c3-guide">교과서와 자료에서 <b>우리 유물에 대한 새 문장</b>을 찾아 가르쳐요. <b>어디에서 찾았는지(출처)</b>를 꼭 적어요. 선생님이 나중에 제미나이로 확인해요.</p>
  <form data-c5-form="teach" class="c4-own"><label class="field"><span>유물</span><select name="artifact"><option value="">유물을 골라 주세요</option>${choosable(g).map(id=>`<option value="${id}" ${fact.artifact===id?'selected':''}>${e(nameOf(id))}</option>`).join('')}</select></label>
  <fieldset class="c3-choices c3-status-pick"><legend>어떤 문장인가요?</legend>${['사실 확인','고친 문장','판단 보류'].map(s=>`<label><input type="radio" name="status" value="${s}" ${fact.status===s?'checked':''}><span><b>${s}</b></span></label>`).join('')}</fieldset>
  ${fixed?`<label class="field c3-original"><span>틀렸던 원래 문장</span><input name="original" maxlength="300" value="${e(fact.original)}"></label>`:''}
  <label class="field"><span>${fixed?'바르게 고친 문장':'가르칠 문장'}</span><input name="sentence" maxlength="300" value="${e(fact.sentence)}" placeholder="예: 금관에는 나뭇가지 모양 장식이 있다."></label>
  <label class="field"><span>출처 <small>어디에서 찾았나요?</small></span><input name="source" maxlength="${limits.source}" value="${e(fact.source)}" placeholder="예: 교과서 28쪽, 국립경주박물관"></label>
- <button class="primary c3-wide" type="submit" ${left<=0?'disabled':''}>로봇에게 가르치기</button>${left<=5?`<p class="c3-message">${left<=0?'우리 모둠 저장 칸이 가득 찼어요. 선생님께 알려 주세요.':`앞으로 ${left}줄 더 저장할 수 있어요.`}</p>`:''}${notice?`<p class="c3-guide c3-done" role="status">${e(notice)}</p>`:''}</form>
+ <button class="primary c3-wide" type="submit" ${left<=0?'disabled':''}>로봇에게 가르치기</button>${left<=5?`<p class="c3-message">${left<=0?'우리 모둠 저장 칸이 거의 찼어요. 프로필과 로봇 카드를 저장할 자리를 남겨 두었어요. 더 가르치려면 5차시 문장 하나를 지워 주세요.':`앞으로 ${left}줄 더 저장할 수 있어요.`}</p>`:''}${notice?`<p class="c3-guide c3-done" role="status">${e(notice)}</p>`:''}</form>
  <h3 class="c4-sub">${e(josa(nameFor(g),['이','가']))} 배운 문장 <small>${list.length}개</small></h3><ul class="c4-board-list" data-live="mine">${list.map(factItem).join('')||'<li class="c3-empty">아직 배운 문장이 없어요.</li>'}</ul></section>`;
 }
 const addedView=()=>groups.map(g=>{const list=robotFacts(g).filter(f=>f.added);return `<section class="c3-group"><h3>${e(nameFor(g))} <small>새 문장 ${list.length}개 · 모두 ${robotFacts(g).length}개</small></h3>${list.length?`<ul class="c4-board-list">${list.map(factItem).join('')}</ul>`:'<p class="c3-empty">아직 없어요.</p>'}</section>`;}).join('');
@@ -106,15 +119,15 @@ const PREVIEW=320,OUT=384;
 function ensureEditor(){
  if(editor||teacher())return;
  const d=designOf(session.group);
- editor={img:null,rotation:0,zoom:1,x:0,y:0,background:d?.background||backgrounds[0],stickers:[...(d?.stickers||[]),{part:parts[0],artifact:'',evidence:''},{part:parts[1],artifact:'',evidence:''},{part:parts[2],artifact:'',evidence:''}].slice(0,limits.stickers),dirty:false,saving:false,progress:''};
+ editor={img:null,rotation:0,zoom:1,x:0,y:0,background:d?.background||backgrounds[0],stickers:[...(d?.stickers||[]),{part:parts[0],artifact:'',evidence:''},{part:parts[1],artifact:'',evidence:''},{part:parts[2],artifact:'',evidence:''}].slice(0,limits.stickers),dirty:false,saving:false,progress:'',base:latestId(designRows,session.group),image:''};
 }
 function designView(){
  if(teacher())return `<section class="c3-board"><div class="c3-board-head"><h2>모둠 로봇 카드</h2><button class="quiet small" type="button" data-c5="sheets">🖨 로봇 설계도 인쇄</button></div><div data-live="cards">${cardsView()}</div></section>`;
  if(!loaded)return '';
  ensureEditor();
  const g=session.group,d=designOf(g),ids=choosable(g);
- return `<section class="c3-card c5-split"><div><ol class="c4-steps-list c5-how"><li>설계도의 <b>네모 안 그림</b>을 사진으로 찍어요. (얼굴이나 이름은 찍지 않아요)</li><li>그림을 움직이고 키워서 네모에 꼭 맞춰요.</li><li>배경색을 고르고, 어느 부분을 어떤 유물에서 따왔는지 <b>근거 스티커</b>를 붙여요.</li><li><b>로봇 카드 저장하기</b>를 눌러요.</li></ol>
- <div class="c5-file"><label class="button primary">📷 사진 찍기<input type="file" accept="image/*" capture="environment" data-c5-file hidden></label><label class="button quiet">🖼 사진 고르기<input type="file" accept="image/*" data-c5-file hidden></label></div>
+ return `<div data-live="formnote">${formNote()}</div><section class="c3-card c5-split"><div><ol class="c4-steps-list c5-how"><li>설계도의 <b>네모 안 그림</b>을 사진으로 찍어요. (얼굴이나 이름은 찍지 않아요)</li><li>그림을 움직이고 키워서 네모에 꼭 맞춰요.</li><li>배경색을 고르고, 어느 부분을 어떤 유물에서 따왔는지 <b>근거 스티커</b>를 붙여요.</li><li><b>로봇 카드 저장하기</b>를 눌러요.</li></ol>
+ <div class="c5-file"><label class="button primary">📷 사진 찍기<input type="file" accept="image/*" capture="environment" data-c5-file hidden ${editor.saving?'disabled':''}></label><label class="button quiet">🖼 사진 고르기<input type="file" accept="image/*" data-c5-file hidden ${editor.saving?'disabled':''}></label></div>
  ${editor.img?`<div class="c5-tools"><label>크기 <input type="range" min="1" max="3" step="0.05" value="${editor.zoom}" data-c5-zoom></label><button type="button" class="quiet small" data-c5="rotate">↻ 돌리기</button><button type="button" class="quiet small" data-c5="center">가운데로</button></div><p class="c5-hint">그림 위를 손가락으로 끌면 움직여요.</p>`:d?.image?'<p class="c5-hint">저장한 그림이 있어요. 새 사진을 올리면 바뀌어요.</p>':''}
  <fieldset class="c5-swatches"><legend>배경색</legend>${backgrounds.map((c,i)=>`<label><input type="radio" name="background" value="${c}" ${editor.background===c?'checked':''} data-c5-bg><span style="background:${c}" aria-label="배경색 ${i+1}"></span></label>`).join('')}</fieldset>
  <h3 class="c4-sub">근거 스티커 <small>이 모양은 어떤 유물에서 왔나요?</small></h3>${editor.stickers.map((s,i)=>`<div class="c5-sticker-row"><select data-c5-sticker="${i}" data-key="part" aria-label="부분 ${i+1}">${parts.map(p=>`<option ${s.part===p?'selected':''}>${p}</option>`).join('')}</select><select data-c5-sticker="${i}" data-key="artifact" aria-label="유물 ${i+1}"><option value="">유물</option>${ids.map(id=>`<option value="${id}" ${s.artifact===id?'selected':''}>${e(nameOf(id))}</option>`).join('')}</select><input data-c5-sticker="${i}" data-key="evidence" maxlength="${limits.evidence}" value="${e(s.evidence)}" placeholder="근거 예: 나뭇가지 모양 장식 · 교과서 28쪽" aria-label="근거 ${i+1}"></div>`).join('')}
@@ -210,7 +223,9 @@ function openSheets(){
 }
 
 function statusView(){
- return `${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':fromCache&&!live&&!error?'<p class="c3-guide">마지막으로 불러온 자료를 먼저 보여 주고 있어요. 새 자료를 불러오는 중이에요…</p>':''}`;
+ // 저장 오류(error)는 다음에 무언가 누를 때까지 남기고, 불러오기 오류(loadError)는 새로 불러올 때마다 바뀝니다.
+ const message=error||loadError;
+ return `${message?`<p class="c3-message" role="alert">${e(message)}</p>`:''}${!loaded?'<p class="c3-guide">반 자료를 불러오는 중이에요…</p>':fromCache&&!live&&!message?'<p class="c3-guide">마지막으로 불러온 자료를 먼저 보여 주고 있어요. 새 자료를 불러오는 중이에요…</p>':''}`;
 }
 function showCached(){
  const c=readCache(session.code);if(!c||!joined())return;
@@ -232,6 +247,7 @@ function paint(){
  const root=liveRoot;if(!root?.isConnected)return;
  put(root.querySelector('[data-live=cards]'),cardsView(tab===3));
  put(root.querySelector('[data-live=added]'),addedView());
+ put(root.querySelector('[data-live=formnote]'),formNote());
  if(!teacher())put(root.querySelector('[data-live=mine]'),robotFacts(session.group).map(factItem).join('')||'<li class="c3-empty">아직 배운 문장이 없어요.</li>');
 }
 async function refresh(root,full=false){
@@ -247,13 +263,21 @@ async function refresh(root,full=false){
  if(boardOk||roomOk)writeCache(code,sentences,roomRows);
  const firstLive=!live&&boardOk&&roomOk;if(firstLive)live=true;
  const wasLoaded=loaded;loaded=true;
- error=problems.length?`인터넷이 느려서 ${problems[0]}을 아직 못 불러왔어요. 8초마다 자동으로 다시 불러와요.${fromCache||boardOk?' 그동안 마지막으로 불러온 자료를 보여 줘요.':''}`:'';
+ loadError=problems.length?`인터넷이 느려서 ${problems[0]}을 아직 못 불러왔어요. 8초마다 자동으로 다시 불러와요.${fromCache||boardOk?' 그동안 마지막으로 불러온 자료를 보여 줘요.':''}`:'';
  // 기억해 둔 자료로 만든 입력 칸은, 아직 손대지 않았다면 새 자료로 다시 채웁니다.
  if(firstLive&&draft&&!draft.touched)draft=null;
  if(firstLive&&editor&&!editor.img&&!editor.touched)editor=null;
+ // 다른 태블릿이 새로 저장했고 이 태블릿은 아직 손대지 않았으면 새 내용으로 다시 채웁니다.
+ let reform=false;
+ if(!teacher()&&session.group){
+  const g=session.group;
+  if(draft&&!draft.touched&&draft.base!==latestId(profileRows,g)){draft=null;reform=reform||tab===0;}
+  if(editor&&!editor.saving&&!editor.img&&!editor.touched&&editor.base!==latestId(designRows,g)){editor=null;reform=reform||tab===2;}
+ }
  if(!root.isConnected)return;
  // 쓰고 있는 프로필·문장·그림을 지우지 않도록, 처음 불러올 때와 문장판이 바뀌었을 때만 화면 전체를 다시 그립니다.
  if(!wasLoaded||boardChanged&&!editor?.img||firstLive&&fromCache&&!editor?.img)return render(root);
+ if(reform)return keepPlace(root,()=>render(root));
  put(root.querySelector('[data-live=status]'),statusView());
  paint();
 }
@@ -298,8 +322,12 @@ export function mountLessonFive(root){
   }
   if(kind==='profile'){
    if(!draft.name.trim()){error='로봇 이름을 지어 주세요.';return render(root);}
-   try{await saveProfile(session.code,session.author,session.group,draft,roomRows);error='';notice=`${josa(draft.name.trim(),['이','가'])} 프로필을 저장했어요!`;await refresh(root);draft=null;render(root);}
-   catch(err){error=err.message;render(root);}
+   if(rowsLeft(session.group)<1&&!ownRow(session.group,'P')){error=FULL;return render(root);}
+   if(busy)return;busy=true;form.querySelector('button[type=submit]')?.setAttribute('disabled','');
+   try{await saveProfile(session.code,session.author,session.group,draft,roomRows);error='';notice=`${josa(draft.name.trim(),['이','가'])} 프로필을 저장했어요!`;await refresh(root);draft=null;}
+   catch(err){error=err.message;}
+   finally{busy=false;}
+   render(root);
   }
   if(kind==='teach'){
    Object.assign(fact,{sentence:String(data.sentence||''),original:String(data.original??fact.original),source:String(data.source||'')});
@@ -307,9 +335,13 @@ export function mountLessonFive(root){
    if(!fact.sentence.trim()){error='가르칠 문장을 적어 주세요.';return render(root);}
    if(fact.status==='고친 문장'&&!fact.original.trim()){error='틀렸던 원래 문장도 적어 주세요.';return render(root);}
    if(!fact.source.trim()){error='어디에서 찾았는지 출처를 적어 주세요.';return render(root);}
+   if(teachLeft(session.group)<1){error='우리 모둠 저장 칸이 거의 찼어요. 더 가르치려면 5차시 문장 하나를 지워 주세요.';return render(root);}
+   if(busy)return;busy=true;form.querySelector('button[type=submit]')?.setAttribute('disabled','');
    try{await teachMore(session.code,session.author,session.group,{nation:nationOfRobot(session.group),artifact:fact.artifact,sentence:fact.sentence.trim(),original:fact.original.trim(),status:fact.status,source:fact.source.trim()});
-    fact={...blankFact(),artifact:fact.artifact,source:fact.source};error='';notice=`${josa(nameFor(session.group),['이','가'])} 새 문장을 배웠어요!`;await refresh(root);render(root);}
-   catch(err){error=err.message;render(root);}
+    fact={...blankFact(),artifact:fact.artifact,source:fact.source};error='';notice=`${josa(nameFor(session.group),['이','가'])} 새 문장을 배웠어요!`;await refresh(root);}
+   catch(err){error=err.message;}
+   finally{busy=false;}
+   render(root);
   }
   if(kind==='ask')ask(root,data.question);
  });
@@ -317,33 +349,48 @@ export function mountLessonFive(root){
   const el=event.target.closest('[data-c5]');if(!el)return;
   const action=el.dataset.c5;
   if(action==='tab'){tab=+el.dataset.tab;notice='';error='';render(root);window.scrollTo(0,0);}
+  if(action==='leave'&&editor?.saving&&!confirm('로봇 카드를 저장하는 중이에요. 저장은 계속돼요. 나갈까요?'))return;
   if(action==='leave'){session={code:session.code,group:null,author:session.author};saveSession(session);draft=null;fact=null;editor=null;chats={};showRobot=0;render(root);}
   if(action==='refresh'){await refresh(root,true);render(root);}
   if(action==='catch'&&draft){draft.touched=true;draft.catchphrase=el.dataset.value;keepPlace(root,()=>render(root));}
   if(action==='forget'&&confirm('로봇이 이 문장을 잊게 할까요?')){
-   try{await forget(session.code,session.author,el.dataset.id);facts=facts.filter(f=>f.id!==el.dataset.id);paint();}
+   try{const id=el.dataset.id;await forget(session.code,session.author,id);facts=facts.filter(f=>f.id!==id);roomRows=roomRows.filter(r=>r.id!==id);keepPlace(root,()=>render(root));}
    catch(err){error=err.message;render(root);}
   }
+  if(action==='reload-form'){if(tab===0)draft=null;if(tab===2&&editor&&!editor.saving){if(editor.img&&!confirm('올려 둔 새 사진은 지워져요. 불러올까요?'))return;editor=null;}keepPlace(root,()=>render(root));}
   if(action==='gemini'){openStep(3);location.hash='#lesson/4';}
   if(action==='sheets')openSheets();
   if(action==='rotate'&&editor?.img){editor.rotation=(editor.rotation+90)%360;editor.dirty=true;drawCanvas();}
   if(action==='center'&&editor?.img){Object.assign(editor,{x:0,y:0,zoom:1,dirty:true});keepPlace(root,()=>render(root));}
   if(action==='save-design'&&editor&&!editor.saving){
-   const g=session.group,before=designOf(g);
-   editor.saving=true;editor.progress='';notice='';error='';keepPlace(root,()=>render(root));
+   // 저장하는 동안 나가거나 다른 것을 눌러도 이 저장은 처음 상태(ed)로 끝까지 갑니다.
+   const ed=editor,g=session.group,code=session.code,author=session.author,run=++saveRun;
+   if(rowsLeft(g)<1&&!ownRow(g,'D')){error=FULL;return keepPlace(root,()=>render(root));}
+   const sent=ed.img&&ed.dirty?{img:ed.img,rotation:ed.rotation,zoom:ed.zoom,x:ed.x,y:ed.y}:null;
+   ed.saving=true;ed.progress='';notice='';error='';keepPlace(root,()=>render(root));
+   let problem='',message='로봇 카드를 저장했어요! 4번 발표회 화면에서 친구들과 함께 봐요.';
    try{
-    let image=before?.image||'';
-    if(editor.img&&editor.dirty){
+    let image=ed.image||designOf(g)?.image||'',rows=roomRows;
+    if(sent){
      const url=exportPicture();
-     image=await uploadImage(session.author,url,(done,total)=>{editor.progress=`그림 올리는 중 ${done}/${total}`;const b=root.querySelector('[data-c5=save-design]');if(b)b.textContent=editor.progress;});
-     images.set(image,{status:'done',url});
+     image=await uploadImage(author,url,(done,total)=>{if(run!==saveRun||editor!==ed)return;ed.progress=`그림 올리는 중 ${done}/${total}`;const b=root.querySelector('[data-c5=save-design]');if(b)b.textContent=ed.progress;});
+     images.set(image,{status:'done',url});ed.image=image;
+    }else{
+     // 새 사진 없이 꾸미기만 저장할 때는, 다른 태블릿이 방금 올린 그림을 놓치지 않게 한 번 더 불러옵니다.
+     try{const fresh=await loadRoom(code,author);rows=fresh.rows;const d=fresh.designs.find(x=>x.group===g);if(d?.image)image=d.image;}catch{}
     }
-    await saveDesign(session.code,session.author,g,image,editor,roomRows);
-    await refresh(root);
-    Object.assign(editor,{img:null,dirty:false});
-    notice='로봇 카드를 저장했어요! 4번 발표회 화면에서 친구들과 함께 봐요.';
-   }catch(err){error=err.message;}
-   editor.saving=false;keepPlace(root,()=>render(root));
+    await saveDesign(code,author,g,image,ed,rows);
+    if(session.code===code)await refresh(root);
+    ed.base=latestId(designRows,g);
+   }catch(err){problem=err.message;}
+   ed.saving=false;
+   if(editor!==ed||session.code!==code||session.group!==g)return;
+   if(!problem){
+    const same=sent&&ed.img===sent.img&&ed.rotation===sent.rotation&&ed.zoom===sent.zoom&&ed.x===sent.x&&ed.y===sent.y;
+    if(!sent||same)Object.assign(ed,{img:null,dirty:false,touched:false});
+    else message='저장하는 동안 바꾼 그림은 아직 저장되지 않았어요. 한 번 더 저장해 주세요.';
+   }
+   notice=problem?'':message;error=problem;keepPlace(root,()=>render(root));
   }
   if(action==='pick'){showRobot=+el.dataset.group;render(root);const input=root.querySelector('[data-c5-form=ask] input[name=question]');input?.scrollIntoView({behavior:'smooth',block:'center'});input?.focus({preventScroll:true});}
   if(action==='voice'){voiceOn=!voiceOn;if(!voiceOn&&'speechSynthesis' in window)speechSynthesis.cancel();render(root);}

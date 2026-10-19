@@ -62,16 +62,18 @@ export function joinImage(rows){
  return /^[A-Za-z0-9+/]+=*$/.test(b64)?`data:image/${mime};base64,${b64}`:'';
 }
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+// 한 줄이라도 세 번 실패하면 나머지 줄은 더 보내지 않고 멈춥니다.
 export async function uploadImage(author,dataUrl,onProgress=()=>{}){
- const room=newImageRoom(),rows=splitImage(dataUrl),queue=[...rows];let done=0;
+ const room=newImageRoom(),rows=splitImage(dataUrl),queue=[...rows];let done=0,failed=false;
  async function send(row){
   for(let attempt=0;;attempt++){
+   if(failed)return;
    try{await rpc('class5_add',{p_code:room,p_group:1+row.index%6,p_artifact:`I|${row.index}|${row.total}|${row.mime}`,p_sentence:row.sentence,p_source:row.source,p_status:row.original?'고친 문장':'사실 확인',p_author:author,p_original:row.original});break;}
-   catch(err){if(attempt>=2)throw err;await wait(600*(attempt+1));}
+   catch(err){if(attempt>=2){failed=true;queue.length=0;throw err;}await wait(600*(attempt+1));}
   }
-  onProgress(++done,rows.length);
+  if(!failed)try{onProgress(++done,rows.length);}catch{}
  }
- await Promise.all(Array.from({length:6},async()=>{while(queue.length)await send(queue.shift());}));
+ await Promise.all(Array.from({length:6},async()=>{while(queue.length&&!failed)await send(queue.shift());}));
  return room;
 }
 export async function loadImage(author,room){
@@ -82,9 +84,18 @@ export async function loadImage(author,room){
 
 const add=(code,author,group,artifact,sentence,original,source='')=>rpc('class5_add',{p_code:roomOf(code),p_group:group,p_artifact:artifact,p_sentence:sentence,p_source:source,p_status:original?'고친 문장':'사실 확인',p_author:author,p_original:original});
 // 새로 저장한 뒤 이 태블릿이 올렸던 예전 것은 지웁니다. 다른 태블릿 것은 남아도 마지막 저장만 씁니다.
+// 모둠 칸(40줄)이 가득 찼으면 이 태블릿의 예전 것을 먼저 지우고 다시 씁니다. 그래도 안 되면 예전 것을 되살립니다.
 async function replace(code,author,group,artifact,sentence,original,rows){
- await add(code,author,group,artifact,sentence,original);
- for(const r of rows.filter(r=>r.artifact===artifact&&r.group===group&&r.mine))try{await rpc('class5_remove',{p_code:roomOf(code),p_id:r.id,p_author:author});}catch{}
+ const old=rows.filter(r=>r.artifact===artifact&&r.group===group&&r.mine);
+ const remove=r=>rpc('class5_remove',{p_code:roomOf(code),p_id:r.id,p_author:author});
+ try{await add(code,author,group,artifact,sentence,original);}
+ catch(err){
+  if(!/40문장/.test(err.message)||!old.length)throw err;
+  const first=old.shift();await remove(first);
+  try{await add(code,author,group,artifact,sentence,original);}
+  catch(again){try{await add(code,author,group,artifact,first.sentence,first.original||'');}catch{}throw again;}
+ }
+ for(const r of old)try{await remove(r);}catch{}
 }
 export function saveProfile(code,author,group,profile,rows){const {name,raw}=encodeProfile(profile);return replace(code,author,group,'P',name||`${group}모둠 로봇`,raw,rows);}
 export function saveDesign(code,author,group,image,design,rows){return replace(code,author,group,'D',ROOM.test(image||'')?image:'-',encodeDesign(design),rows);}

@@ -74,7 +74,7 @@ export function askNationRobot(input,nation,facts,nameOf=id=>id){
  }
  if(!subject&&/뭐가 있|무엇이 있|어떤 유물|무슨 유물/.test(text)){
   const names=[...new Set(mine.map(f=>f.artifact).filter(Boolean))].map(nameOf);
-  return reply('알려 줄게요',`제가 배운 ${nation} 유물은 ${names.join(', ')}이에요.`);
+  return reply('알려 줄게요',`제가 배운 ${nation} 유물은 ${josa(names.join(', '),['이에요','예요'])}.`);
  }
  const scored=pool.map(f=>{
   const now=similarity(text,f.sentence),before=f.original?similarity(text,f.original):{score:0,words:[]};

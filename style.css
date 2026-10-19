@@ -177,3 +177,4 @@
 @media(max-width:1400px){.c4-tv .c5-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:900px){.c4-tv .c5-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.c4-tv .c5-cards{grid-template-columns:1fr}}
+.c5-note{background:#fff7e0}

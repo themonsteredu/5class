@@ -33,7 +33,9 @@ export function readRoom(rows){
  // 5차시: P = 로봇 프로필, D = 로봇 디자인(그림이 든 방 이름과 꾸미기). 모둠마다 마지막 저장을 씁니다.
  // 꾸미기 내용(raw)은 lesson-five-store.js가 검사해서 풉니다.
  const profiles=last(rows,r=>r.artifact==='P').map(r=>({group:r.group,name:r.sentence,raw:r.original||'',id:r.id,mine:r.mine}));
- const designs=last(rows,r=>r.artifact==='D').map(r=>({group:r.group,image:/^p[a-z0-9]{11}$/.test(r.sentence)?r.sentence:'',raw:r.original||'',id:r.id,mine:r.mine}));
+ // 그림은 그림이 든 가장 최근 줄에서 가져옵니다. 그림 없이 꾸미기만 저장한 줄이 그림을 지우지 않게 합니다.
+ const picture=group=>[...rows].reverse().find(r=>r.artifact==='D'&&r.group===group&&/^p[a-z0-9]{11}$/.test(r.sentence))?.sentence||'';
+ const designs=last(rows,r=>r.artifact==='D').map(r=>({group:r.group,image:picture(r.group),raw:r.original||'',id:r.id,mine:r.mine}));
  return {sorts,teams,facts,profiles,designs};
 }
 // 마지막으로 불러온 반 자료를 이 기기에 기억해 두었다가, 다음에 화면을 열 때 먼저 보여 줍니다(인터넷이 느릴 때 대비).

@@ -30,3 +30,4 @@ test('held judgments and untaught things stay unknown',()=>{
 });
 test('artifact names are found by the earliest mention',()=>{assert.equal(findArtifact('금관은 유리로 만들었다').id,'gold-crown');assert.equal(findArtifact('서산 마애 삼존상').id,'seosan');});
 test('real AI prompt carries only that nation and the statuses',()=>{const p=nationPrompt('고구려',[...facts,{nation:'신라',artifact:'gold-crown',sentence:'금관은 신라 유물이다',original:'',status:'사실 확인'}],nameOf);assert.match(p,/고구려 역사 로봇/);assert.match(p,/\[고친 문장\] \(수산리 고분 벽화\)/);assert.doesNotMatch(p,/금관은 신라/);});
+test('artifact lists ending in a vowel use 예요',async()=>{const {askNationRobot}=await import('../robot.js');const r=askNationRobot('신라 유물은 뭐가 있어?','신라',[{nation:'신라',artifact:'belt',sentence:'허리띠에는 장식이 있다.',original:'',status:'사실 확인'}],id=>id==='belt'?'금제 허리띠':id);assert.match(r.say,/허리띠예요\.$/);});

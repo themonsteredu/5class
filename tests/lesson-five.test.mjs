@@ -39,3 +39,8 @@ test('the class room reader returns the latest profile and design per group and 
  assert.equal(v.designs.find(d=>d.group===2).image,'pabcdefghijk');assert.equal(v.designs.find(d=>d.group===5).image,'');
  assert.equal(v.facts[0].added,true);assert.equal(v.facts[0].source,'교과서 28쪽');
 });
+test('a later card saved without a picture keeps the earlier drawing',()=>{
+ const v=readRoom([{id:'1',group:2,artifact:'D',sentence:'pabcdefghijk',original:'{"b":1}'},{id:'2',group:2,artifact:'D',sentence:'-',original:'{"b":3}'}]);
+ const d=v.designs.find(x=>x.group===2);
+ assert.equal(d.image,'pabcdefghijk');assert.equal(d.raw,'{"b":3}');assert.equal(d.id,'2');
+});
