@@ -1,4 +1,5 @@
 import {escapeHtml as e} from './model.js';
+import {mountMuseum} from './museum.js';
 import {artifacts} from './data.js';
 import {loadSession as load,saveSession,token,rpc,loadRoom,readRoom,readCache,writeCache,forget} from './lesson-four-store.js';
 import {askNationRobot,findArtifact} from './robot.js';
@@ -7,8 +8,9 @@ import {openStep} from './lesson-four.js';
 import {personalities,catchphrases,voices,parts,backgrounds,limits,maxImageChars,decodeProfile,decodeDesign,uploadImage,loadImage,saveProfile,saveDesign,teachMore} from './lesson-five-store.js';
 
 // 5차시: 4차시에 만든 모둠 로봇에게 프로필을 주고, 새 문장을 더 가르치고, 아이들이 그린 그림으로 로봇 카드를 만들어 발표합니다.
-export const fifthSteps=['로봇 프로필 정하기','더 가르치기','로봇 디자인','로봇 발표회'];
-const fifthTimes=[8,12,15,5];
+export const fifthSteps=['로봇 준비','더 가르치기','유물 박물관','최종 답안·현황'];
+const fifthTimes=[5,10,20,5];
+let disposeMuseum=null;
 const {groups,nameOf}=room;
 const statusMark={'사실 확인':'✓','고친 문장':'✎','판단 보류':'?'};
 const kinds={'맞아요':'ok','아니에요':'no','알려 줄게요':'ok','알 수 없어요':'mixed','몰라요':'unknown'};
@@ -56,7 +58,7 @@ function robotCard(g,{pick=false,photo=''}={}){
 const cardsView=(pickable=false)=>`<div class="c5-cards">${groups.map(g=>robotCard(g,{pick:pickable?g===showRobot:null})).join('')}</div>`;
 
 function joinView(){
- return `<section class="c3-card c3-join"><p class="c3-kicker">5차시 · 모둠 로봇 완성하기</p><h1>수업코드를 넣고 입장해요</h1><p class="c3-lead">3·4차시와 같은 수업코드를 넣어요.</p><form data-c5-form="join"><label class="field"><span>수업코드</span><input name="code" inputmode="numeric" autocomplete="off" maxlength="12" value="${e(session.code)}" placeholder="3차시와 같은 숫자" required></label><fieldset class="c3-choices c3-group-pick"><legend>우리 모둠</legend>${groups.map(g=>`<label><input type="radio" name="group" value="${g}" ${session.group===g?'checked':''}><span>${g}모둠</span></label>`).join('')}</fieldset><button class="primary c3-wide" type="submit">입장하기</button><button class="quiet c3-wide" type="submit" name="teacher" value="1">선생님 화면</button></form>${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}</section>`;
+ return `<section class="c3-card c3-join"><p class="c3-kicker">5차시 · 이름을 잃어버린 박물관</p><h1>수업코드를 넣고 입장해요</h1><p class="c3-lead">3·4차시와 같은 수업코드를 넣어요.</p><form data-c5-form="join"><label class="field"><span>수업코드</span><input name="code" inputmode="numeric" autocomplete="off" maxlength="12" value="${e(session.code)}" placeholder="3차시와 같은 숫자" required></label><fieldset class="c3-choices c3-group-pick"><legend>우리 모둠</legend>${groups.map(g=>`<label><input type="radio" name="group" value="${g}" ${session.group===g?'checked':''}><span>${g}모둠</span></label>`).join('')}</fieldset><button class="primary c3-wide" type="submit">입장하기</button><button class="quiet c3-wide" type="submit" name="teacher" value="1">선생님 화면</button></form>${error?`<p class="c3-message" role="alert">${e(error)}</p>`:''}</section>`;
 }
 
 // 같은 모둠의 다른 태블릿이 새로 저장했는데 이 태블릿에서 이미 고치고 있으면, 덮어쓰기 전에 알려 줍니다.
@@ -74,11 +76,11 @@ function ensureDraft(){
  draft={name:p?.name||'',personality:p?.personality||'',catchphrase:p?.catchphrase||'',intro:p?.intro||'',favorite:p?.favorite||'',custom:!!p?.personality&&!personalities.includes(p.personality),base:latestId(profileRows,session.group)};
 }
 function profileView(){
- if(teacher())return `<section class="c3-board"><div class="c3-board-head"><h2>모둠 로봇 프로필</h2><button class="quiet small" type="button" data-c5="sheets">🖨 로봇 설계도 인쇄</button></div><div data-live="cards">${cardsView()}</div></section>`;
+ if(teacher())return `<section class="c3-board"><div class="c3-board-head"><h2>모둠 로봇 프로필</h2><span>가르치기를 마치면 유물 박물관을 열어요.</span></div><div data-live="cards">${cardsView()}</div></section>`;
  if(!loaded)return '';
  ensureDraft();
  const g=session.group,custom=draft.custom;
- return `<div data-live="formnote">${formNote()}</div><section class="c3-card c5-split"><form data-c5-form="profile"><p class="c3-guide">우리 로봇은 <b>${e(robotLabel(g))}</b>이에요. 이름과 성격, 말버릇을 정해 주세요. 발표회에서 로봇이 이 말투로 대답해요.</p>
+ return `<div data-live="formnote">${formNote()}</div><section class="c3-card c5-split"><form data-c5-form="profile"><p class="c3-guide">우리 로봇은 <b>${e(robotLabel(g))}</b>이에요. 이름과 성격, 말버릇을 정해 주세요. 박물관에서는 모두 같은 로봇 모습으로 정체를 숨겨요.</p>
  <label class="field"><span>1. 로봇 이름 <small>${limits.name}자까지</small></span><input name="name" maxlength="${limits.name}" value="${e(draft.name)}" placeholder="예: 금관이"></label>
  <fieldset class="c3-choices c5-chips"><legend>2. 성격</legend>${personalities.map(p=>`<label><input type="radio" name="personality" value="${p}" ${draft.personality===p?'checked':''}><span>${p}</span></label>`).join('')}<label><input type="radio" name="personality" value="__custom" ${custom?'checked':''}><span>직접 쓰기</span></label></fieldset>${custom?`<label class="field"><span>우리가 정한 성격</span><input name="personality-custom" maxlength="${limits.personality}" value="${e(draft.personality)}"></label>`:''}
  <label class="field"><span>3. 말버릇 <small>대답 끝에 붙어요</small></span><input name="catchphrase" maxlength="${limits.catchphrase}" value="${e(draft.catchphrase)}" placeholder="예: 삐빅!"></label><div class="c4-examples">${catchphrases.map(c=>`<button type="button" class="quiet small" data-c5="catch" data-value="${e(c)}">${e(c)}</button>`).join('')}</div>
@@ -122,7 +124,7 @@ function ensureEditor(){
  editor={img:null,rotation:0,zoom:1,x:0,y:0,background:d?.background||backgrounds[0],stickers:[...(d?.stickers||[]),{part:parts[0],artifact:'',evidence:''},{part:parts[1],artifact:'',evidence:''},{part:parts[2],artifact:'',evidence:''}].slice(0,limits.stickers),dirty:false,saving:false,progress:'',base:latestId(designRows,session.group),image:''};
 }
 function designView(){
- if(teacher())return `<section class="c3-board"><div class="c3-board-head"><h2>모둠 로봇 카드</h2><button class="quiet small" type="button" data-c5="sheets">🖨 로봇 설계도 인쇄</button></div><div data-live="cards">${cardsView()}</div></section>`;
+ if(teacher())return `<section class="c3-board"><div class="c3-board-head"><h2>모둠 로봇 카드</h2><span>가르치기를 마치면 유물 박물관을 열어요.</span></div><div data-live="cards">${cardsView()}</div></section>`;
  if(!loaded)return '';
  ensureEditor();
  const g=session.group,d=designOf(g),ids=choosable(g);
@@ -232,9 +234,11 @@ function showCached(){
  const v=readRoom(c.rows);sentences=c.board;roomRows=c.rows;facts=v.facts;profileRows=v.profiles;designRows=v.designs;loaded=true;fromCache=true;
 }
 function render(root){
- if(!joined()){root.innerHTML=`<div class="c3-page">${joinView()}</div>`;return;}
- const body=[profileView,teachView,designView,showView][tab]();
- root.innerHTML=`<div class="c3-page c4-page c5-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(nameFor(session.group))}</b></p><div><button class="quiet small" type="button" data-c5="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c5="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="5차시 활동 순서">${fifthSteps.map((label,i)=>`<button type="button" data-c5="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fifthTimes[i]}분</small></button>`).join('')}</nav><div data-live="status">${statusView()}</div>${body}</div>`;
+ if(!joined()){disposeMuseum?.();disposeMuseum=null;root.innerHTML=`<div class="c3-page">${joinView()}</div>`;return;}
+ disposeMuseum?.();disposeMuseum=null;
+ const body=tab<2?[profileView,teachView][tab](): '<div data-museum-mount></div>';
+ root.innerHTML=`<div class="c3-page c4-page c5-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(tab>=2?`${session.group}조`:nameFor(session.group))}</b></p><div><button class="quiet small" type="button" data-c5="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c5="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="5차시 활동 순서">${fifthSteps.map((label,i)=>`<button type="button" data-c5="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fifthTimes[i]}분</small></button>`).join('')}</nav><div data-live="status">${statusView()}</div>${body}</div>`;
+ if(tab>=2)disposeMuseum=mountMuseum(root.querySelector('[data-museum-mount]'),()=>({session,facts}),{answersOnly:tab===3});
  drawCanvas();
 }
 // 바뀐 곳만 다시 그립니다. 쓰고 있는 글이나 고른 글은 건드리지 않습니다.
@@ -276,7 +280,7 @@ async function refresh(root,full=false){
  }
  if(!root.isConnected)return;
  // 쓰고 있는 프로필·문장·그림을 지우지 않도록, 처음 불러올 때와 문장판이 바뀌었을 때만 화면 전체를 다시 그립니다.
- if(!wasLoaded||boardChanged&&!editor?.img||firstLive&&fromCache&&!editor?.img)return render(root);
+ if(tab<2&&(!wasLoaded||boardChanged&&!editor?.img||firstLive&&fromCache&&!editor?.img))return render(root);
  if(reform)return keepPlace(root,()=>render(root));
  put(root.querySelector('[data-live=status]'),statusView());
  paint();
