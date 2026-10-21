@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 64" preserveAspectRatio="none" fill="none">
+  <defs>
+    <linearGradient id="wood" x2="0" y2="1"><stop stop-color="#785035"/><stop offset=".45" stop-color="#3e271c"/><stop offset="1" stop-color="#241b16"/></linearGradient>
+    <linearGradient id="brass"><stop stop-color="#685035"/><stop offset=".25" stop-color="#c0a36a"/><stop offset=".5" stop-color="#eed29a"/><stop offset=".78" stop-color="#a48650"/><stop offset="1" stop-color="#58432e"/></linearGradient>
+    <radialGradient id="top" cx=".42" cy=".3" r=".8"><stop stop-color="#947452"/><stop offset=".65" stop-color="#644630"/><stop offset="1" stop-color="#3e2b20"/></radialGradient>
+  </defs>
+  <ellipse cx="180" cy="53" rx="161" ry="10" fill="#24170e" opacity=".22"/>
+  <path d="M19 22v21c0 22 322 22 322 0V22" fill="url(#wood)" stroke="#33251c"/>
+  <path d="M20 40c0 21 320 21 320 0v7c0 22-320 22-320 0z" fill="url(#brass)"/>
+  <path d="M20 23c0 21 320 21 320 0v5c0 21-320 21-320 0z" fill="url(#brass)"/>
+  <ellipse cx="180" cy="22" rx="164" ry="20" fill="url(#brass)"/>
+  <ellipse cx="180" cy="20" rx="156" ry="16" fill="url(#top)" stroke="#dbc18c" stroke-width=".8"/>
+  <ellipse cx="180" cy="20" rx="142" ry="12" stroke="#c3a575" stroke-opacity=".45"/>
+  <g stroke="#c2a16a" stroke-width="1.2" opacity=".85">
+    <path d="m61 37 7-3 7 4-7 3zm28 4 7-3 7 4-7 3zm28 3 7-3 7 4-7 3zm130 0-7-3-7 4 7 3zm28-3-7-3-7 4 7 3zm28-4-7-3-7 4 7 3z"/>
+    <path d="M159 45h-8v6h8v-3h-4m46-3h8v6h-8v-3h4"/>
+    <path d="m180 40 9 7-9 7-9-7z"/><path d="m180 44 4 3-4 3-4-3z"/>
+  </g>
+</svg>
