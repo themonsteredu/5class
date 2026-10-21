@@ -1,0 +1,3 @@
+import {escapeHtml as e} from './model.js';
+export const worksheetHeader=(school,subject,lesson=5)=>`<div class="leap-top"><b>2026. AI연구학교</b><b>${e(school)} (5학년)</b></div><div class="leap-logo"><img src="assets/worksheets/leap-original-logo.png" alt="AI-L.E.A.P. 활동지 · Boseong Elementary School"></div><table class="leap-meta"><colgroup><col style="width:17%"><col style="width:55%"><col style="width:28%"></colgroup><tr><th>단 원</th><td>AI와 함께하는 역사 탐구</td><td>${lesson} 차시</td></tr><tr><th>주 제</th><td>${e(subject)}</td><td>이름:</td></tr></table>`;
+export const worksheetLines=(n=3)=>`<div class="leap-lines">${'<div></div>'.repeat(n)}</div>`;

@@ -1,3 +1,4 @@
+from worksheet_template import apply_template
 from pathlib import Path
 import json,fitz
 from fontTools.ttLib import TTFont
@@ -66,7 +67,7 @@ for id,s in sets.items():
  text(19,285,'자료에는 책의 쪽수 또는 기관·자료 제목을 씁니다. 못 찾은 내용은 거짓으로 단정하지 않습니다.',8)
  text(19,291,'3차시에는 우리 질문의 조사 기록과 문장 검증 기록, 두 쪽을 모두 가져옵니다.',8,color=muted)
  doc.set_metadata({'title':f'2차시 질문 조사와 문장 검증 - {s["name"]}','author':'MOAKIT'})
- doc.subset_fonts();doc.save(out/f'lesson-2-{id}.pdf',garbage=4,deflate=True)
+ doc=apply_template(doc,2,s['name'],'질문의 답을 자료에서 찾고, 문장이 사실인지 확인할 수 있어요.',55);doc.subset_fonts();doc.save(out/f'lesson-2-{id}.pdf',garbage=4,deflate=True)
  allpages.insert_pdf(doc)
 allpages.set_metadata({'title':'2차시 질문 조사와 문장 검증 활동지 6종 (12쪽)','author':'MOAKIT'})
 allpages.save(out/'lesson-2.pdf',garbage=4,deflate=True)

@@ -1,3 +1,4 @@
+from worksheet_template import apply_template
 from pathlib import Path
 import fitz
 from fontTools.ttLib import TTFont as Font
@@ -37,4 +38,4 @@ heading(235,'03','조사 방법 정하기','우리 모둠의 질문을 해결할
 check(22,255,'교과서');check(78,255,'박물관 설명');check(142,255,'AI에게 질문하기')
 text(22,268,'조사할 내용',9,color=muted);rule(22,279,169)
 text(19,290,'오늘의 질문을 다음 시간에도 이어 가요. 활동지를 잘 보관하세요.',8,color=muted)
-doc.subset_fonts();doc.save(out,garbage=4,deflate=True);print(out)
+doc=apply_template(doc,1,'삼국과 가야의 궁금증 찾기','유물을 관찰하고, 궁금한 점을 질문으로 만들 수 있어요.',65);doc.subset_fonts();doc.save(out,garbage=4,deflate=True);print(out)

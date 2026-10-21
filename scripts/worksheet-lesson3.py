@@ -1,3 +1,4 @@
+from worksheet_template import apply_template
 from pathlib import Path
 import json,re,fitz
 from fontTools.ttLib import TTFont
@@ -26,7 +27,8 @@ def wrap(text,size,width,font):
   else:rows[-1]=candidate
  return rows
 allpages=fitz.open()
-for id,s in sets.items():
+for id in groups:
+ s=sets[id]
  name,page_no,image,fact,caution=field(id,'name'),field(id,'page'),field(id,'image'),field(id,'fact'),field(id,'caution')
  doc=fitz.open();page=doc.new_page(width=595.276,height=841.89)
  for family in ['SCore','SCoreBold']:page.insert_font(fontname=family,fontfile=str(ROOT/f'tmp/pdfs/{family}.otf'))
@@ -60,7 +62,7 @@ for id,s in sets.items():
  text(19,285,'자료에는 교과서 쪽수를 씁니다. 자료에 없는 내용은 거짓으로 단정하지 않고 ‘판단하기 어려움’을 고릅니다.',8)
  text(19,291,'이미지: 교과서 발췌 또는 국립중앙박물관·한성백제박물관 공개 자료',7.5,color=muted)
  doc.set_metadata({'title':f'3차시 새 유물 문장 확인 - {name}','author':'MOAKIT'})
- doc.subset_fonts();doc.save(out/f'lesson-3-{id}.pdf',garbage=4,deflate=True)
+ doc=apply_template(doc,3,name,'새 유물의 특징을 자료로 확인하고 근거를 기록할 수 있어요.',52);doc.subset_fonts();doc.save(out/f'lesson-3-{id}.pdf',garbage=4,deflate=True)
  allpages.insert_pdf(doc)
 allpages.set_metadata({'title':'3차시 새 유물 문장 확인 활동지 (모둠 6종 + 보너스 2종)','author':'MOAKIT'})
 allpages.save(out/'lesson-3.pdf',garbage=4,deflate=True)

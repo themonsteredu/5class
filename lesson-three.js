@@ -1,3 +1,4 @@
+import {worksheetHeader,worksheetLines} from './worksheet-template.js';
 import {escapeHtml as e} from './model.js';
 import {artifacts,coreArtifacts,outsideArtifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
@@ -215,7 +216,8 @@ export function mountLessonThree(root,source){
 
 export function thirdWorksheet(source,school,group){
  const name=nameFor(source);
- return `<article class="worksheet printable"><header><span>${e(school)||'MOAKIT'} · AI × 사회</span><span>5학년 · 3차시</span></header><h2>우리 반 문장판에 올릴 문장</h2><p>모둠: ${e(group)||'____________'}　이름: ____________　날짜: ____________</p>${name?`<p class="worksheet-question">2차시 유물: ${e(name)}</p>`:''}<p>2차시 활동지에서 우리 질문의 답 1개와 검증한 문장 3개를 옮기고, 새로 맡은 유물의 문장 3개를 더 적습니다.</p>${[1,2,3,4,5,6,7].map(n=>`<section><h3>${n}. 유물 / 문장 / 확인한 자료 / 사실 확인 · 고친 문장 · 판단 보류</h3><div class="writing-lines"></div></section>`).join('')}</article>`;
+ const page=(nums,first)=>`<section class="leap-page">${first?worksheetHeader(school||'보성초등학교','우리 반 문장판에 올릴 문장',3)+`<h3>◎ 학습목표</h3><p>자료에서 확인한 문장을 근거와 함께 정리할 수 있어요.</p><p>모둠: ${e(group)||'________'} · 2차시 유물: ${e(name||'________')}</p><p>우리 질문의 답 1개, 검증한 문장 3개, 새 유물의 문장 3개를 적어요.</p>`:''}${nums.map(n=>`<section><h3>${n}. 유물 / 문장 / 확인한 자료</h3><p>□ 사실 확인　□ 고친 문장　□ 판단 보류</p>${worksheetLines(3)}</section>`).join('')}<p class="leap-foot">3차시 · 문장 조사 기록</p></section>`;
+ return `<article class="leap-pages printable">${page([1,2,3],true)}${page([4,5,6,7],false)}</article>`;
 }
 
 export function thirdAnswers(){

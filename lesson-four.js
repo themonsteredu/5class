@@ -1,3 +1,4 @@
+import {worksheetHeader} from './worksheet-template.js';
 import {escapeHtml as e} from './model.js';
 import {artifacts} from './data.js';
 import {observationIds} from './lesson-one.js';
@@ -231,7 +232,7 @@ const box=label=>`<span class="c4-box">☐ ${label}</span>`;
 function handoutSheet(g,filled){
  const list=aiRequest('check',g).facts,c=aiChecks[g],done=filled&&c?.status==='done'&&sameFacts(c.facts,list);
  const sections=checkSections({robot:robotName(g),facts:list});
- return `<section class="c4-sheet"><header><span>4차시 · 제미나이로 확인하기 활동지</span><span>수업코드 ${e(session.code)}</span></header><h2>${e(robotName(g))}</h2><p class="c4-sheet-names">모둠 친구 이름: <span></span></p>
+ return `<section class="c4-sheet leap-page">${worksheetHeader('보성초등학교','제미나이로 확인하기 · '+robotName(g),4)}<h3>◎ 학습목표</h3><p>AI의 판단과 우리 생각을 비교하고 자료로 확인할 수 있어요.</p><p>수업코드 ${e(session.code)}</p><p class="c4-sheet-names">모둠 친구 이름: <span></span></p>
  <h3>① 우리 로봇이 배운 문장 <small>제미나이에게 묻기 전에 내 예상을 먼저 표시해요.</small></h3>
  <table class="c4-sheet-table"><thead><tr><th>번호</th><th>유물</th><th>로봇에게 가르친 문장</th><th>우리 반 표시</th><th>내 예상</th><th>제미나이 판정</th><th>같은 생각?</th></tr></thead><tbody>${list.map((f,i)=>{const r=done?verdictOf(c,i):null;return `<tr><td>${i+1}</td><td>${e(f.artifact)}</td><td>${f.original?`<s>${e(f.original)}</s> → `:''}${e(f.sentence)}</td><td>${statusMark[f.status]||''} ${e(f.status)}</td><td>${box('맞아요')}<br>${box('고쳐야 해요')}<br>${box('알 수 없어요')}</td><td>${r?`<b>${e(r.verdict)}</b>`:''}</td><td>${r?(r.verdict===expectedVerdict[f.status]?'👍 같아요':'🔍 달라요'):`${box('예')}<br>${box('아니요')}`}</td></tr>`;}).join('')}</tbody></table>
  <h3>② 생각이 다른 문장을 자료로 확인해요 <small>교과서 쪽수나 2차시 자료를 찾아봐요.</small></h3>
@@ -244,7 +245,7 @@ function openHandouts(only=0){
  const dialog=document.getElementById('modal');if(!dialog)return;
  const robots=(only?[only]:groups).filter(g=>aiRequest('check',g).facts.length);
  const any=robots.some(g=>aiChecks[g]?.status==='done');
- dialog.innerHTML=`<div class="modal-top c4-sheet-tools">${any?`<label class="check"><input type="checkbox" data-c4-sheet="filled" ${handoutFilled?'checked':''}>제미나이 판정도 채워서 인쇄</label>`:''}<button type="button" class="primary" data-action="print">활동지 인쇄 · PDF 저장</button><button type="button" class="quiet" data-action="close">닫기 ×</button></div><article class="printable c4-handouts">${robots.map(g=>handoutSheet(g,handoutFilled)).join('')||'<p>아직 문장을 배운 로봇이 없어요. 2번 화면에서 먼저 가르쳐 주세요.</p>'}</article>`;
+ dialog.innerHTML=`<div class="modal-top c4-sheet-tools">${any?`<label class="check"><input type="checkbox" data-c4-sheet="filled" ${handoutFilled?'checked':''}>제미나이 판정도 채워서 인쇄</label>`:''}<button type="button" class="primary" data-action="print">활동지 인쇄 · PDF 저장</button><button type="button" class="quiet" data-action="close">닫기 ×</button></div><article class="printable c4-handouts leap-pages">${robots.map(g=>handoutSheet(g,handoutFilled)).join('')||'<p>아직 문장을 배운 로봇이 없어요. 2번 화면에서 먼저 가르쳐 주세요.</p>'}</article>`;
  dialog.querySelector('[data-c4-sheet=filled]')?.addEventListener('change',event=>{handoutFilled=event.target.checked;openHandouts(only);});
  if(!dialog.open)dialog.showModal();
 }
