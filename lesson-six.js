@@ -1,0 +1,11 @@
+import {escapeHtml as e} from './model.js';
+import {loadSession,saveSession,token,loadRoom} from './lesson-four-store.js';
+import {openFifthWorksheet} from './lesson-five-worksheet.js';
+export function mountLessonSix(root){
+ let session=loadSession(),facts=[],loaded=false,error='';
+ const render=()=>{if(!root.isConnected)return;root.innerHTML=`<section class="c3-page"><p class="eyebrow">6차시 · 배움 마무리</p><h1>우리 반 역사 OX 퀴즈</h1><p class="lead">로봇에게 가르친 내용을 떠올리고, 근거를 찾아 바르게 고쳐 봅시다.</p><form data-six-join class="c3-card"><label class="field"><span>수업코드</span><input name="code" value="${e(session.code)}" pattern="[0-9a-z]{4,12}" maxlength="12" required></label><label class="field"><span>참여</span><select name="group">${[0,1,2,3,4,5,6].map(g=>`<option value="${g}" ${session.group===g?'selected':''}>${g?g+'모둠':'선생님'}</option>`).join('')}</select></label><button class="quiet">수업 자료 불러오기</button></form>${error?`<p role="alert">${e(error)}</p>`:''}${session.group===0?`<section class="c3-card"><h2>OX 활동지 준비</h2><p>우리 반이 로봇에게 가르친 내용을 불러와 문제·정답·근거를 확인한 뒤 인쇄해 주세요.</p><button class="primary" data-six-sheet ${!loaded?'disabled':''}>6차시 OX 활동지 · 정답지</button><p>${loaded?'학생들에게 활동지를 나눠 주고 아래 순서로 진행하세요.':'수업 자료를 불러오면 활동지를 준비할 수 있어요.'}</p></section>`:''}<section class="c3-card"><h2>오늘의 활동</h2><ol><li><b>혼자 풀기</b> — 종이 활동지의 문장을 읽고 O 또는 X에 표시해요.</li><li><b>근거 비교하기</b> — 교과서와 로봇에게 가르친 내용을 떠올리며 친구와 이유를 나눠요.</li><li><b>바르게 고치기</b> — X인 문장을 고치고 그 까닭을 써요.</li><li><b>돌아보기</b> — 로봇이 잘 설명하려면 어떻게 가르쳐야 할지 한 줄로 적어요.</li></ol><p>이 활동으로 우리 반 역사 탐구 수업을 마칩니다.</p></section></section>`;};
+ async function fetchFacts(){loaded=false;error='';render();try{const data=await loadRoom(session.code,session.author);facts=data.facts;loaded=true;}catch(err){error=err.message;}render();}
+ root.addEventListener('submit',event=>{if(!event.target.matches('[data-six-join]'))return;event.preventDefault();const f=new FormData(event.target);session={code:String(f.get('code')).trim(),group:Number(f.get('group')),author:session.author||token()};saveSession(session);fetchFacts();});
+ root.addEventListener('click',event=>{if(event.target.closest('[data-six-sheet]')&&session.group===0&&loaded)openFifthWorksheet({facts,code:session.code,lesson:6});});
+ render();if(session.code&&session.author)fetchFacts();
+}
