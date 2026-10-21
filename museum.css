@@ -12,3 +12,15 @@
 @media(min-width:901px){.museum-room{height:760px}.exhibit-4,.exhibit-5{top:390px}.exhibit-6{top:520px}}
 @media(min-width:521px) and (max-width:900px){.museum-room{height:740px}.exhibit-6{top:510px}}
 @media(max-width:520px){.museum-room{height:840px}.exhibit-3{top:350px}.exhibit-4{top:380px}.exhibit-5{top:580px}.exhibit-6{top:610px}}
+
+/* Photoreal gallery plate: one compressed static image, no rendering loop. */
+.museum-room{background:#b5a18a url('assets/museum/gallery-interior.webp') center center/cover no-repeat;border-color:#b29b79;box-shadow:inset 0 0 50px #33241330}
+.museum-wall{inset:0 0 auto;background:none;border:0;box-shadow:none;padding-top:54px;color:#fff7df;text-shadow:0 2px 8px #39250c,0 1px 3px #39250c}
+.museum-wall span{opacity:.95}.museum-wall b{font-weight:600}.museum-wall i{background:#f2dbab;box-shadow:0 1px 4px #39250c}
+.museum-floor{display:none}
+.museum-plinth{background:linear-gradient(100deg,#e9dfcb 0%,#e3d7bd 71%,#b4a083 72%,#ab9271 100%);border-bottom:3px solid #8a7354;box-shadow:8px 15px 14px #35241155}
+.museum-plinth:before{background:linear-gradient(160deg,#fff9e9,#d8c6a8)}
+.museum-plinth b{color:#79603b}.museum-exhibit-status{background:#fffaf0f2;color:#4e3c25;box-shadow:0 2px 5px #35241122}
+.m5-object img{filter:drop-shadow(5px 8px 5px #38271460)}
+@media(max-width:900px){.museum-room{background-position:center center}.museum-wall{padding-top:40px}}
+@media(max-width:520px){.museum-room{background-size:auto 100%;background-position:center center}.museum-wall{padding:35px 8px 0}.museum-wall b{font-size:16px}.museum-wall span{letter-spacing:1px}}

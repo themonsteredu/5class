@@ -22,3 +22,6 @@ Artifact prompt set (one call per source): isolate the exact referenced artifact
 | star | cheomseongdae.jpg |
 
 WebP assets are resized for web delivery, retaining alpha. Generated artifacts are educational exhibit illustrations rather than photogrammetric models. The reveal dialog labels them accordingly and links the original source and credit from data.js. Murals and other image-based exhibits retain original reference images; legacy crown reuses the gold-crown sprite. Original licensing/attribution is retained in data.js and ASSETS.md.
+
+## Gallery background
+`gallery-interior.webp` is a generated photorealistic architectural background, not a photograph of a named museum. Created with the built-in image generation tool, then compressed as WebP for low-spec tablets. Prompt: A photorealistic Korean antiquities museum interior, frontal wide-angle view, warm limestone and walnut walls, recessed illuminated side vitrines, ceiling spotlights and polished stone floor; spacious empty central floor for interactive exhibits; no people, text, logos or freestanding cases. Landscape 1536×1024.
