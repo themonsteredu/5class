@@ -178,3 +178,6 @@
 @media(max-width:900px){.c4-tv .c5-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.c4-tv .c5-cards{grid-template-columns:1fr}}
 .c5-note{background:#fff7e0}
+
+/* 대표 유물은 배경 없는 전시 이미지의 전체 형태를 보여 줍니다. */
+.c5-artifact-photo{background:transparent}.c5-artifact-photo img{object-fit:contain;padding:16px;box-sizing:border-box}

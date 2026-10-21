@@ -1,5 +1,5 @@
 import {escapeHtml as e} from './model.js';
-import {mountMuseum} from './museum.js';
+import {mountMuseum,exhibitImage} from './museum.js';
 import {artifacts} from './data.js';
 import {loadSession as load,saveSession,token,rpc,loadRoom,readRoom,readCache,writeCache,forget} from './lesson-four-store.js';
 import {askNationRobot,findArtifact} from './robot.js';
@@ -7,7 +7,7 @@ import * as room from './robot-room.js';
 import {openStep} from './lesson-four.js';
 import {personalities,catchphrases,voices,parts,backgrounds,limits,maxImageChars,decodeProfile,decodeDesign,uploadImage,loadImage,saveProfile,saveDesign,teachMore} from './lesson-five-store.js';
 
-// 5차시: 4차시에 만든 모둠 로봇에게 프로필을 주고, 새 문장을 더 가르치고, 아이들이 그린 그림으로 로봇 카드를 만들어 발표합니다.
+// 5차시: 대표 유물의 이미지로 로봇을 준비하고, 가르친 내용을 바탕으로 박물관에서 정체를 추리합니다.
 export const fifthSteps=['로봇 준비','더 가르치기','유물 박물관','최종 답안·현황'];
 const fifthTimes=[5,10,20,5];
 let disposeMuseum=null;
@@ -49,11 +49,12 @@ function imageUrl(id){
  return '';
 }
 
-// 로봇 카드: 그림, 이름, 자기소개 말풍선, 근거 스티커
-function robotCard(g,{pick=false,photo=''}={}){
- const p=profileOf(g),d=designOf(g),url=photo||imageUrl(d?.image),loading=d?.image&&images.get(d.image)?.status==='loading';
- const stickers=d?.stickers||[];
- return `<article class="c5-card ${pick?'is-picked':''}" style="--card:${e(d?.background||backgrounds[5])}">${pick===null?'':`<button type="button" class="c5-card-hit" data-c5="pick" data-group="${g}" aria-label="${e(nameFor(g))} 고르기"></button>`}<div class="c5-photo">${photo==='canvas'?'<canvas data-c5-canvas width="320" height="320" aria-label="그림 자리 맞추기"></canvas>':url?`<img src="${e(url)}" alt="${e(nameFor(g))} 그림">`:`<span aria-hidden="true">${loading?'⏳':'🤖'}</span>`}</div><div class="c5-card-body"><h3>${e(nameFor(g))}</h3><p class="c5-tag">${room.robotFace[nationOfRobot(g)]} ${e(robotLabel(g))}${p?.personality?` · ${e(p.personality)}`:''}</p>${p?.intro?`<p class="c5-bubble">${e(p.intro)}${p.catchphrase?` <b>${e(p.catchphrase)}</b>`:''}</p>`:''}${stickers.length?`<ul class="c5-stickers">${stickers.map(s=>`<li><b>${e(s.part)}</b> ← ${e(s.artifact?nameOf(s.artifact):'')}${s.evidence?`<small>${e(s.evidence)}</small>`:''}</li>`).join('')}</ul>`:''}<p class="c5-meta">배운 문장 ${robotFacts(g).length}개${p?.favorite?` · 대표 유물 ${e(nameOf(p.favorite))}`:''}</p></div></article>`;
+// 준비 화면은 대표 유물 이미지, 박물관의 비공개 전시는 공통 로봇 이미지를 사용합니다.
+// 이전에 저장한 사진과 꾸미기는 이 화면의 이미지에 영향을 주지 않습니다.
+function robotCard(g,{pick=false}={}){
+ const p=profileOf(g),id=[p?.favorite,...groupArtifacts(g)].find(id=>artifacts.some(a=>a.id===id));
+ const url=id?exhibitImage(id):'assets/museum/guide.webp';
+ return `<article class="c5-card ${pick?'is-picked':''}" style="--card:${backgrounds[5]}">${pick===null?'':`<button type="button" class="c5-card-hit" data-c5="pick" data-group="${g}" aria-label="${e(nameFor(g))} 고르기"></button>`}<div class="c5-photo c5-artifact-photo"><img src="${e(url)}" alt="${e(id?nameOf(id):'대표 유물을 골라 주세요')}" decoding="async"></div><div class="c5-card-body"><h3>${e(nameFor(g))}</h3><p class="c5-tag">${room.robotFace[nationOfRobot(g)]} ${e(robotLabel(g))}${p?.personality?` · ${e(p.personality)}`:''}</p>${p?.intro?`<p class="c5-bubble">${e(p.intro)}${p.catchphrase?` <b>${e(p.catchphrase)}</b>`:''}</p>`:''}<p class="c5-meta">배운 문장 ${robotFacts(g).length}개${id?` · 대표 유물 ${e(nameOf(id))}`:''}</p></div></article>`;
 }
 const cardsView=(pickable=false)=>`<div class="c5-cards">${groups.map(g=>robotCard(g,{pick:pickable?g===showRobot:null})).join('')}</div>`;
 
@@ -80,7 +81,7 @@ function profileView(){
  if(!loaded)return '';
  ensureDraft();
  const g=session.group,custom=draft.custom;
- return `<div data-live="formnote">${formNote()}</div><section class="c3-card c5-split"><form data-c5-form="profile"><p class="c3-guide">우리 로봇은 <b>${e(robotLabel(g))}</b>이에요. 이름과 성격, 말버릇을 정해 주세요. 박물관에서는 모두 같은 로봇 모습으로 정체를 숨겨요.</p>
+ return `<div data-live="formnote">${formNote()}</div><section class="c3-card c5-split"><form data-c5-form="profile"><p class="c3-guide">우리 로봇은 <b>${e(robotLabel(g))}</b>이에요. 이름과 성격, 말버릇을 정해 주세요. 대표 유물을 고르면 유물 이미지가 자동으로 나타나요. 박물관에서는 모두 같은 로봇 모습으로 정체를 숨겨요.</p>
  <label class="field"><span>1. 로봇 이름 <small>${limits.name}자까지</small></span><input name="name" maxlength="${limits.name}" value="${e(draft.name)}" placeholder="예: 금관이"></label>
  <fieldset class="c3-choices c5-chips"><legend>2. 성격</legend>${personalities.map(p=>`<label><input type="radio" name="personality" value="${p}" ${draft.personality===p?'checked':''}><span>${p}</span></label>`).join('')}<label><input type="radio" name="personality" value="__custom" ${custom?'checked':''}><span>직접 쓰기</span></label></fieldset>${custom?`<label class="field"><span>우리가 정한 성격</span><input name="personality-custom" maxlength="${limits.personality}" value="${e(draft.personality)}"></label>`:''}
  <label class="field"><span>3. 말버릇 <small>대답 끝에 붙어요</small></span><input name="catchphrase" maxlength="${limits.catchphrase}" value="${e(draft.catchphrase)}" placeholder="예: 삐빅!"></label><div class="c4-examples">${catchphrases.map(c=>`<button type="button" class="quiet small" data-c5="catch" data-value="${e(c)}">${e(c)}</button>`).join('')}</div>
