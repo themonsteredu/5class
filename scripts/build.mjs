@@ -1,6 +1,6 @@
 import {cp,mkdir,rm} from 'node:fs/promises';
 await rm('dist',{recursive:true,force:true});await mkdir('dist');
-for(const p of ['index.html','app.js','lesson-one.js','lesson-two.js','lesson-two-data.js','lesson-three.js','lesson-three-data.js','lesson-four.js','lesson-four-store.js','robot.js','robot-room.js','gemini-prompt.js','lesson-five.js','lesson-five-store.js','museum.js','museum-model.js','museum-store.js','museum.css','data.js','model.js','style.css','assets'])await cp(p,`dist/${p}`,{recursive:true});
+for(const p of ['index.html','app.js','lesson-one.js','lesson-two.js','lesson-two-data.js','lesson-three.js','lesson-three-data.js','lesson-four.js','lesson-four-store.js','robot.js','robot-room.js','gemini-prompt.js','lesson-five.js','lesson-five-store.js','lesson-five-worksheet.js','museum.js','museum-model.js','museum-store.js','museum.css','data.js','model.js','style.css','assets'])await cp(p,`dist/${p}`,{recursive:true});
 console.log('Built 5class → dist');
 
 for(const font of ['5Medium','7ExtraBold'])await rm(`dist/assets/fonts/S-CoreDream-${font}.woff`,{force:true});

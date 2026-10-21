@@ -1,3 +1,4 @@
+import {openFifthWorksheet} from './lesson-five-worksheet.js';
 import {escapeHtml as e} from './model.js';
 import {mountMuseum,exhibitImage} from './museum.js';
 import {artifacts} from './data.js';
@@ -211,19 +212,7 @@ function listen(root){
  try{rec.start();}catch{listening=false;render(root);}
 }
 
-// 선생님이 나눠 줄 로봇 설계도: 모둠마다 한 장, 네모 안에 그린 그림을 나중에 사진으로 찍습니다.
-function sheet(g){
- const ids=choosable(g);
- return `<section class="c5-sheet"><header><span>5차시 · 우리 모둠 로봇 설계도</span><span>수업코드 ${e(session.code)}</span></header><h2>${e(robotLabel(g))}</h2><p class="c5-sheet-art">우리 유물: ${ids.map(id=>e(nameOf(id))).join(', ')||'3차시 문장판의 우리 유물'}</p>
- <table class="c5-sheet-profile"><tbody><tr><th>로봇 이름</th><td></td><th>성격</th><td></td></tr><tr><th>말버릇</th><td></td><th>대표 유물</th><td></td></tr><tr><th>자기소개</th><td colspan="3"></td></tr></tbody></table>
- <div class="c5-sheet-draw"><span>이 네모 안에만 그려요. 나중에 이 네모를 사진으로 찍어요.</span></div>
- <table class="c5-sheet-evidence"><thead><tr><th>로봇의 부분</th><th>어떤 유물에서 따왔나요?</th><th>근거 (교과서 쪽수·자료)</th></tr></thead><tbody>${[0,1,2].map(()=>'<tr><td></td><td></td><td></td></tr>').join('')}</tbody></table></section>`;
-}
-function openSheets(){
- const dialog=document.getElementById('modal');if(!dialog)return;
- dialog.innerHTML=`<div class="modal-top c4-sheet-tools"><button type="button" class="primary" data-action="print">설계도 인쇄 · PDF 저장</button><button type="button" class="quiet" data-action="close">닫기 ×</button></div><article class="printable c5-sheets">${groups.map(sheet).join('')}</article>`;
- if(!dialog.open)dialog.showModal();
-}
+function openSheets(){openFifthWorksheet({facts,code:session.code});}
 
 function statusView(){
  // 저장 오류(error)는 다음에 무언가 누를 때까지 남기고, 불러오기 오류(loadError)는 새로 불러올 때마다 바뀝니다.
@@ -238,7 +227,7 @@ function render(root){
  if(!joined()){disposeMuseum?.();disposeMuseum=null;root.innerHTML=`<div class="c3-page">${joinView()}</div>`;return;}
  disposeMuseum?.();disposeMuseum=null;
  const body=tab<2?[profileView,teachView][tab](): '<div data-museum-mount></div>';
- root.innerHTML=`<div class="c3-page c4-page c5-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(tab>=2?`${session.group}조`:nameFor(session.group))}</b></p><div><button class="quiet small" type="button" data-c5="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c5="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="5차시 활동 순서">${fifthSteps.map((label,i)=>`<button type="button" data-c5="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fifthTimes[i]}분</small></button>`).join('')}</nav><div data-live="status">${statusView()}</div>${body}</div>`;
+ root.innerHTML=`<div class="c3-page c4-page c5-page ${teacher()?'c4-tv':''}"><div class="c3-bar"><p>수업코드 <b>${e(session.code)}</b> · <b>${teacher()?'선생님 화면':e(tab>=2?`${session.group}조`:nameFor(session.group))}</b></p><div>${teacher()?`<button class="quiet small" type="button" data-c5="sheets" ${!loaded?'disabled':''}>활동지 · OX 인쇄</button>`:''}<button class="quiet small" type="button" data-c5="refresh">다시 불러오기</button><button class="quiet small" type="button" data-c5="leave">나가기</button></div></div><nav class="c4-tabs" aria-label="5차시 활동 순서">${fifthSteps.map((label,i)=>`<button type="button" data-c5="tab" data-tab="${i}" ${i===tab?'aria-current="step"':''}><span>${i+1}</span>${label}<small>${fifthTimes[i]}분</small></button>`).join('')}</nav><div data-live="status">${statusView()}</div>${body}</div>`;
  if(tab>=2)disposeMuseum=mountMuseum(root.querySelector('[data-museum-mount]'),()=>({session,facts}),{answersOnly:tab===3});
  drawCanvas();
 }
