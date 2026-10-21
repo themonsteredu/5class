@@ -4,7 +4,7 @@ import {listMuseum,readConfig,saveConfig,writeMuseum} from './museum-store.js';
 const cuts=new Set(['spoon','house','armor','figurines','gold-crown','belt','pagoda','buddha','seosan','glass','burner','star']);
 export function exhibitImage(id){const a=artifactById(id);return cuts.has(id)?`assets/museum/${id}.webp`:id==='crown'?'assets/museum/gold-crown.webp':`assets/images/${a?.image||''}`;}
 export function mountMuseum(root,getContext,{answersOnly=false}={}){
- let config=null,rows=[],loading=true,problem='',message='',busy=false,selected=-1,answers=[],draftDirty=false,transient={},questionDraft='',lastFocus=null,closed=false,voice=false,syncing=false;
+ let config=null,rows=[],loading=true,problem='',message='',busy=false,selected=-1,historyGroup=null,answers=[],draftDirty=false,transient={},questionDraft='',lastFocus=null,closed=false,voice=false,syncing=false;
  let setupIds=null,setupGroups=null,setupLimit=5,scrolled=false;
  const mountedSession={...getContext().session};
  const context=()=>({...getContext(),session:mountedSession}),isTeacher=()=>mountedSession.group===0;
@@ -46,7 +46,7 @@ export function mountMuseum(root,getContext,{answersOnly=false}={}){
  function gallery(){
   return `<div class="museum-room" aria-label="입체 유물 전시관"><div class="museum-wall" aria-hidden="true"><span>THE MUSEUM OF QUESTIONS</span><b>우리반의 역사박물관</b><i></i></div><div class="museum-floor" aria-hidden="true"></div><div class="museum-exhibits">${config.ids.map((id,i)=>{
    const reveal=exposed(i),winners=config.groups.filter(g=>state(g).correct[i]);
-   return `<button class="museum-exhibit exhibit-${i+1} ${reveal?'is-revealed':''}" data-museum="exhibit" data-index="${i}" aria-label="${i+1}번 ${reveal?e(nameOf(id)):'미확인 유물'}"><span class="museum-glow" aria-hidden="true"></span><span class="m5-object"><img src="${reveal?exhibitImage(id):'assets/museum/guide.webp'}" alt="${reveal?e(nameOf(id)):'정체를 숨긴 공통 로봇'}" draggable="false" decoding="async"></span><span class="museum-plinth"><b>${String(i+1).padStart(2,'0')}</b><span>${reveal?e(nameOf(id)):'미확인 유물'}</span></span><span class="museum-exhibit-status">${isTeacher()?`맞힌 모둠 · ${winners.length?winners.map(g=>g+'조').join(' · '):'아직 없어요'}`:reveal?'전시 공개 ✓':`${remaining(i)}회 질문 가능`}</span></button>`;
+   return `<div class="museum-exhibit exhibit-${i+1} ${reveal?'is-revealed':''}" ><button class="museum-exhibit-hit" data-museum="exhibit" data-index="${i}" aria-label="${i+1}번 ${reveal?e(nameOf(id)):'미확인 유물'}"><span class="museum-glow" aria-hidden="true"></span><span class="m5-object"><img src="${reveal?exhibitImage(id):'assets/museum/guide.webp'}" alt="${reveal?e(nameOf(id)):'정체를 숨긴 공통 로봇'}" draggable="false" decoding="async"></span><span class="museum-plinth"><b>${String(i+1).padStart(2,'0')}</b><span>${reveal?e(nameOf(id)):'미확인 유물'}</span></span></button><span class="museum-exhibit-status">${isTeacher()?`맞힌 모둠 · ${winners.length?winners.map(g=>`<button type="button" class="museum-winner" data-museum="history" data-index="${i}" data-group="${g}" aria-label="${i+1}번 유물을 맞힌 ${g}조 질문 기록">${g}조</button>`).join(' · '):'아직 없어요'}`:reveal?'전시 공개 ✓':`${remaining(i)}회 질문 가능`}</span></div>`;
   }).join('')}</div></div>`;
  }
  function candidates(){
@@ -60,11 +60,15 @@ export function mountMuseum(root,getContext,{answersOnly=false}={}){
  }
  function teacherSummary(){
   const submitted=config.groups.filter(g=>state(g).submission).length,complete=config.groups.filter(g=>state(g).complete).length;
-  return `<section class="museum-summary"><div class="museum-section-heading"><h2>우리 반 탐구 현황</h2><span>제출 ${submitted}/${config.groups.length} · 전체 정답 ${complete}/${config.groups.length}</span></div><div class="museum-table-wrap"><table><thead><tr><th>모둠</th>${config.ids.map((_,i)=>`<th>${i+1}번</th>`).join('')}<th>진행</th></tr></thead><tbody>${config.groups.map(g=>{const s=state(g);return `<tr><th>${g}조</th>${s.correct.map(ok=>`<td>${ok?'<span class="museum-correct">정답</span>':s.submission?'다시 도전':'—'}</td>`).join('')}<td>${s.complete?'전체 정답':s.submission?'제출 완료':s.joined?'활동 중':'입장 대기'}</td></tr>`;}).join('')}</tbody></table></div><p>${submitted===config.groups.length?'모든 모둠이 제출했어요.':'아직 탐구 중인 모둠이 있어요.'} ${complete===config.groups.length?'모든 모둠이 전체 유물을 맞혔어요!':''}</p><div class="museum-actions"><button class="primary" data-museum="reveal" ${busy||config.open?'disabled':''}>${config.open?'전체 공개 완료':'유물 전체 공개'}</button><button class="quiet" data-museum="new" ${busy?'disabled':''}>새 박물관 준비</button></div><p class="museum-note">전체 공개 전까지 TV에는 번호와 맞힌 모둠만 표시됩니다. 자동 갱신 8초.</p></section>`;
+  return `<section class="museum-summary"><div class="museum-section-heading"><h2>우리 반 탐구 현황</h2><span>제출 ${submitted}/${config.groups.length} · 전체 정답 ${complete}/${config.groups.length}</span></div><div class="museum-table-wrap"><table><thead><tr><th>모둠</th>${config.ids.map((_,i)=>`<th>${i+1}번</th>`).join('')}<th>진행</th></tr></thead><tbody>${config.groups.map(g=>{const s=state(g);return `<tr><th>${g}조</th>${s.correct.map((ok,i)=>`<td>${ok?`<button class="museum-winner" data-museum="history" data-index="${i}" data-group="${g}" aria-label="${g}조 ${i+1}번 질문 기록">정답 ↗</button>`:s.submission?'다시 도전':'—'}</td>`).join('')}<td>${s.complete?'전체 정답':s.submission?'제출 완료':s.joined?'활동 중':'입장 대기'}</td></tr>`;}).join('')}</tbody></table></div><p>${submitted===config.groups.length?'모든 모둠이 제출했어요.':'아직 탐구 중인 모둠이 있어요.'} ${complete===config.groups.length?'모든 모둠이 전체 유물을 맞혔어요!':''}</p><div class="museum-actions"><button class="primary" data-museum="reveal" ${busy||config.open?'disabled':''}>${config.open?'전체 공개 완료':'유물 전체 공개'}</button><button class="quiet" data-museum="new" ${busy?'disabled':''}>새 박물관 준비</button></div><p class="museum-note">전체 공개 전까지 TV에는 번호와 맞힌 모둠만 표시됩니다. 자동 갱신 8초.</p></section>`;
  }
  function modalContent(){
   if(selected<0||!config)return '';
   const i=selected,id=config.ids[i],reveal=exposed(i),a=artifactById(id);
+  if(isTeacher()&&historyGroup!==null){
+   const records=state(historyGroup).questions.filter(r=>r.artifact===`Q|${i}`);
+   return `<div class="museum-modal-top"><div><p class="museum-eyebrow">질문으로 찾은 단서</p><h2>${i+1}번 유물 · ${historyGroup}조 질문 기록</h2></div><button class="quiet" data-museum="close">닫기 ×</button></div><p class="museum-note">정답을 맞힌 모둠 · 저장된 질문 ${records.length}개</p><ol class="museum-history">${records.map((r,n)=>`<li><p class="museum-history-label">질문 ${n+1}</p><p class="museum-history-question">${e(r.sentence)}</p><p class="museum-history-answer"><b>로봇의 답변</b>${e(r.original||'저장된 답변이 없어요.')}</p></li>`).join('')||'<li>저장된 질문이 없어요. 대화 없이 답을 제출했을 수 있어요.</li>'}</ol><p class="museum-note">질문 횟수에 포함된 대화를 순서대로 보여 줍니다. 차단되었거나 로봇이 답하지 못한 질문은 저장되지 않아요.</p>`;
+  }
   if(isTeacher())return `<div class="museum-modal-top"><h2>${i+1}번 ${reveal?e(nameOf(id)):'미확인 유물'}</h2><button class="quiet" data-museum="close" aria-label="닫기">닫기 ×</button></div><div class="museum-detail-image"><img src="${reveal?exhibitImage(id):'assets/museum/guide.webp'}" alt="${reveal?e(nameOf(id)):'공통 로봇'}"></div><table><thead><tr><th>모둠</th><th>진행</th><th>남은 질문</th></tr></thead><tbody>${config.groups.map(g=>{const s=state(g);return `<tr><th>${g}조</th><td>${s.correct[i]?'정답':s.submission?'다시 도전':s.joined?'조사 중':'입장 대기'}</td><td>${Math.max(0,config.limit-s.questions.filter(r=>r.artifact===`Q|${i}`).length)}회</td></tr>`;}).join('')}</tbody></table>`;
   if(reveal)return `<div class="museum-modal-top"><h2>${i+1}번 · ${e(nameOf(id))}</h2><button class="quiet" data-museum="close">닫기 ×</button></div><div class="museum-detail-image"><img src="${exhibitImage(id)}" alt="${e(nameOf(id))}"></div><p>${e(a.fact)}</p><p class="museum-note">${cuts.has(id)?'실제 자료를 바탕으로 만든 전시용 입체 이미지입니다. 세부 모습은 원본 자료에서 확인해요.':'자료 사진을 전시한 이미지입니다.'}</p><a href="${e(a.creditUrl||a.url)}" target="_blank" rel="noopener noreferrer">${e(a.credit||a.source)} · 원본 자료 ↗</a>`;
   const records=own().questions.filter(r=>r.artifact===`Q|${i}`).map(r=>({q:r.sentence,say:r.original})),local=transient[i]||[];
@@ -77,7 +81,7 @@ export function mountMuseum(root,getContext,{answersOnly=false}={}){
   const summary=root.querySelector('[data-museum-summary]');if(summary)summary.innerHTML=isTeacher()?teacherSummary():answerSheet();
   const notice=root.querySelector('[data-museum-notice]');if(notice)notice.innerHTML=safeMessage();
   // Polling never replaces a focused question or candidate select in the open dialog.
-  const dialog=root.querySelector('dialog');if(dialog?.open&&isTeacher())dialog.innerHTML=modalContent();
+  const dialog=root.querySelector('dialog');if(dialog?.open&&isTeacher()){const scroll=dialog.scrollTop;dialog.innerHTML=modalContent();dialog.scrollTop=scroll;}
  }
  function render(){
   if(!active())return;
@@ -121,8 +125,9 @@ export function mountMuseum(root,getContext,{answersOnly=false}={}){
  });
  root.addEventListener('click',event=>{
   const button=event.target.closest('[data-museum]');if(!button)return;const action=button.dataset.museum;
-  if(action==='exhibit'){if(!isTeacher()&&!enabled())return;lastFocus=button;selected=+button.dataset.index;questionDraft='';problem='';message='';render();}
-  if(action==='close'){const index=selected;selected=-1;root.querySelector('dialog')?.close();root.querySelector(`[data-museum=exhibit][data-index="${index}"]`)?.focus();}
+  if(action==='history'&&isTeacher()){const i=Number(button.dataset.index),g=Number(button.dataset.group);if(!config?.groups.includes(g)||!state(g).correct[i])return;selected=i;historyGroup=g;render();}
+  if(action==='exhibit'){historyGroup=null;if(!isTeacher()&&!enabled())return;lastFocus=button;selected=+button.dataset.index;questionDraft='';problem='';message='';render();}
+  if(action==='close'){const index=selected;selected=-1;historyGroup=null;root.querySelector('dialog')?.close();root.querySelector(`[data-museum=exhibit][data-index="${index}"]`)?.focus();}
   if(action==='voice'){voice=!voice;if(!voice)window.speechSynthesis?.cancel();render();}
   if(action==='refresh'){fetchState();}
   if(action==='save'&&enabled())doWork(async()=>{await saveDraft();message='답안을 서버에 저장했어요.';});
